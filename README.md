@@ -12,13 +12,13 @@ escolhida e as condições climáticas da sua região.
 
 ## 👥 Integrantes
 
-| Nome | RM |
-| --- | --- |
-| Luann | RM560313 |
-| Juan Pablo | RM[A PREENCHER] |
+| Nome         | RM              |
+| ------------ | --------------- |
+| Luann        | RM560313        |
+| Juan Pablo   | RM[A PREENCHER] |
 | Lucas Higuti | RM[A PREENCHER] |
-| Victor | RM[A PREENCHER] |
-| Renato | RM[A PREENCHER] |
+| Victor       | RM[A PREENCHER] |
+| Renato       | RM[A PREENCHER] |
 
 > Atualize os RMs pendentes antes da entrega no Portal FIAP.
 
@@ -110,10 +110,10 @@ combinando o contexto climático de satélite com a pergunta do usuário.
   resultado.tsx  → recomendação gerada
   iakaru.tsx     → chat com o assistente IAkaru
   _layout.tsx    → layout raiz: fontes, AuthProvider e proteção de rotas
-/components       → Button, TextField, StatusChip (reutilizáveis)
+/components       → Button, TextField, StatusChip, LocationBadge (reutilizáveis)
 /contexts         → AuthContext (Firebase Authentication + estado global)
 /services         → api (axios), firebase, culturas, recomendacao, historico, iakaru, mocks
-/hooks            → useAuth
+/hooks            → useAuth, useLocation (GPS via expo-location)
 /constants        → theme (design system) e commit (hash do build)
 /scripts          → get-commit-hash.js (gera o hash do commit p/ a tela "Sobre")
 ```
@@ -145,19 +145,41 @@ Separação de responsabilidades: **UI** (`app`/`components`), **estado** (`cont
 
 ### Scripts disponíveis
 
-| Script | O que faz |
-| --- | --- |
-| `npm start` | Inicia o servidor Expo |
-| `npm run lint` | Roda o ESLint (`expo lint`) |
-| `npm run format` | Formata o código com Prettier |
-| `npm run format:check` | Verifica a formatação sem alterar arquivos |
-| `npm run commit-hash` | Gera o hash do commit atual em `constants/commit.json` |
+| Script                 | O que faz                                              |
+| ---------------------- | ------------------------------------------------------ |
+| `npm start`            | Inicia o servidor Expo                                 |
+| `npm run lint`         | Roda o ESLint (`expo lint`)                            |
+| `npm run format`       | Formata o código com Prettier                          |
+| `npm run format:check` | Verifica a formatação sem alterar arquivos             |
+| `npm run commit-hash`  | Gera o hash do commit atual em `constants/commit.json` |
+
+---
+
+## 📍 Localização (GPS)
+
+O app usa **expo-location** para capturar a localização do produtor e, futuramente, enviar
+`latitude`/`longitude` no payload da recomendação (a API Java gerará recomendações por região).
+
+- **Permissão pedida:** localização **em uso** (_when in use_). No Android,
+  `ACCESS_FINE_LOCATION` e `ACCESS_COARSE_LOCATION`; no iOS,
+  `NSLocationWhenInUseUsageDescription`.
+- **Mensagem exibida ao usuário:** _"Akaru precisa da sua localização para fornecer
+  recomendações de plantio precisas para sua região."_
+- **Onde é usada:**
+  - **Cadastro** — botão "Usar GPS" captura cidade/estado via reverse geocoding.
+  - **Home** — captura automática ao abrir; a cidade real aparece no card de clima.
+  - **Nova análise** — `lat`/`lon` são incluídos nos parâmetros enviados ao Resultado.
+- **Fallback:** se a permissão for negada, o app continua funcionando com a localização
+  mockada (`São Paulo, SP`).
+
+A lógica fica no hook [`hooks/useLocation.ts`](hooks/useLocation.ts) e o componente
+[`components/LocationBadge.tsx`](components/LocationBadge.tsx) exibe a localização atual.
 
 ---
 
 ## 🔖 Hash do commit na tela "Sobre o App"
 
-A tela **Sobre o App** ([`app/(tabs)/perfil.tsx`](app/(tabs)/perfil.tsx)) exibe o **hash real
+A tela **Sobre o App** ([`app/(tabs)/perfil.tsx`](<app/(tabs)/perfil.tsx>)) exibe o **hash real
 do commit** de referência, atendendo ao requisito de publicação da disciplina (a versão
 publicada deve corresponder exatamente ao código-fonte).
 

@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import Button from '../../components/Button';
+import { useLocation } from '../../hooks/useLocation';
 import { listarCulturas } from '../../services/culturas';
 import { Cultura } from '../../services/mocks';
 import { colors, spacing, radius, fonts, shadow } from '../../constants/theme';
@@ -28,6 +29,7 @@ export default function AnaliseScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const { location, requestLocation } = useLocation();
 
   const [culturas, setCulturas] = useState<Cultura[]>([]);
   const [busca, setBusca] = useState('');
@@ -52,6 +54,11 @@ export default function AnaliseScreen() {
     };
   }, []);
 
+  // Captura a localização em segundo plano para enviar lat/lon na análise.
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
+
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     if (!termo) return culturas;
@@ -66,12 +73,15 @@ export default function AnaliseScreen() {
       Alert.alert('Selecione uma cultura', 'Escolha uma cultura para gerar a recomendação.');
       return;
     }
-    router.push({
-      pathname: '/resultado',
-      params: detalhes.trim()
-        ? { culturaId: selecionada, detalhes: detalhes.trim() }
-        : { culturaId: selecionada },
-    });
+    // Monta o payload da navegação; lat/lon vão junto quando houver localização.
+    // TODO: a API Java receberá lat/lon para gerar a recomendação por região.
+    const params: Record<string, string> = { culturaId: selecionada };
+    if (detalhes.trim()) params.detalhes = detalhes.trim();
+    if (location) {
+      params.lat = String(location.latitude);
+      params.lon = String(location.longitude);
+    }
+    router.push({ pathname: '/resultado', params });
   }
 
   return (

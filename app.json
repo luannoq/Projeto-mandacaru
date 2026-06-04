@@ -9,10 +9,14 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "br.com.fiap.akaru"
+      "bundleIdentifier": "br.com.fiap.akaru",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Akaru precisa da sua localização para fornecer recomendações de plantio precisas para sua região."
+      }
     },
     "android": {
       "package": "br.com.fiap.akaru",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
       "adaptiveIcon": {
         "backgroundColor": "#1B4D1E",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -34,7 +38,13 @@
           "backgroundColor": "#1B4D1E"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Akaru precisa da sua localização para fornecer recomendações de plantio precisas para sua região."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

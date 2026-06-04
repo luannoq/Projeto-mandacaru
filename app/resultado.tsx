@@ -11,6 +11,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import Button from '../components/Button';
+import LocationBadge from '../components/LocationBadge';
 import { obterRecomendacao } from '../services/recomendacao';
 import { salvarNoHistorico } from '../services/historico';
 import { Recomendacao, DetalheRecomendacao } from '../services/mocks';
@@ -124,12 +125,12 @@ export default function ResultadoScreen() {
           <View style={styles.hero}>
             <Text style={styles.heroEmoji}>{rec.emoji}</Text>
             <Text style={styles.heroNome}>{rec.nome}</Text>
-            <View style={styles.heroLocal}>
-              <Ionicons name="location-outline" size={16} color={colors.muted} />
-              <Text style={styles.heroLocalTexto}>
-                {rec.cidade}, {rec.uf}
-              </Text>
-            </View>
+            <LocationBadge
+              cidade={rec.cidade}
+              estado={rec.uf}
+              style={styles.heroLocal}
+              textStyle={styles.heroLocalTexto}
+            />
             <View style={[styles.badge, { backgroundColor: badge.bg }]}>
               <Text style={[styles.badgeTexto, { color: badge.text }]}>✓ {rec.resumoStatus}</Text>
             </View>

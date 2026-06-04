@@ -10,7 +10,9 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import StatusChip from '../../components/StatusChip';
+import LocationBadge from '../../components/LocationBadge';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLocation } from '../../hooks/useLocation';
 import { obterClimaAtual } from '../../services/culturas';
 import { listarHistorico } from '../../services/historico';
 import { Clima, ItemHistorico } from '../../services/mocks';
@@ -27,6 +29,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+
+  const { location, loading: localizando, requestLocation } = useLocation();
 
   const [clima, setClima] = useState<Clima | null>(null);
   const [consultas, setConsultas] = useState<ItemHistorico[]>([]);
@@ -51,6 +55,11 @@ export default function HomeScreen() {
       ativo = false;
     };
   }, []);
+
+  // Captura a localização do usuário ao abrir a Home (fallback para o mock se negada).
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
 
   const primeiroNome = user?.displayName?.trim().split(/\s+/)[0] ?? 'Produtor';
 
@@ -83,10 +92,16 @@ export default function HomeScreen() {
             {clima && (
               <View style={[styles.card, styles.cardClima]}>
                 <View style={styles.climaTopo}>
-                  <View>
-                    <Text style={styles.climaCidade}>
-                      {clima.cidade}, {clima.uf}
-                    </Text>
+                  <View style={styles.climaEsq}>
+                    <LocationBadge
+                      cidade={location?.cidade}
+                      estado={location?.estado}
+                      loading={localizando}
+                      fallback={`${clima.cidade}, ${clima.uf}`}
+                      color={colors.primary}
+                      iconSize={18}
+                      textStyle={styles.climaCidade}
+                    />
                     <Text style={styles.climaCondicao}>{clima.condicao}</Text>
                   </View>
                   <Text style={styles.climaTemp}>{clima.temperatura}°C</Text>
@@ -213,6 +228,7 @@ const styles = StyleSheet.create({
   },
   cardClima: { padding: 20, gap: spacing.screen },
   climaTopo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  climaEsq: { flex: 1, gap: 2 },
   climaCidade: { fontFamily: fonts.bold, fontSize: 20, color: colors.primary },
   climaCondicao: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, marginTop: 2 },
   climaTemp: { fontFamily: fonts.bold, fontSize: 30, color: colors.primary },

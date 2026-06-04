@@ -22,29 +22,36 @@ import { Ionicons } from '@expo/vector-icons';
 import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLocation } from '../../hooks/useLocation';
 import { colors, spacing, radius, fonts } from '../../constants/theme';
-import { mockClima } from '../../services/mocks';
 
 export default function CadastroScreen() {
   const { signUp } = useAuth();
   const router = useRouter();
 
+  const { location, loading: buscandoGps, requestLocation } = useLocation();
+
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmar, setConfirmar] = useState('');
-  const [localizacao, setLocalizacao] = useState<string | null>(null);
-  const [buscandoGps, setBuscandoGps] = useState(false);
   const [carregando, setCarregando] = useState(false);
 
-  function usarGps() {
-    // TODO: integrar com expo-location para obter a posição real do dispositivo.
-    setBuscandoGps(true);
-    setTimeout(() => {
-      setLocalizacao(`${mockClima.cidade}, ${mockClima.uf}`);
-      setBuscandoGps(false);
-    }, 800);
+  async function usarGps() {
+    const dados = await requestLocation();
+    if (!dados) {
+      Alert.alert(
+        'Permissão necessária',
+        'Não conseguimos acessar sua localização. Ative a permissão de localização do Akaru nas configurações do seu dispositivo e tente novamente.',
+      );
+    }
   }
+
+  const localizacao = location
+    ? location.cidade
+      ? `${location.cidade}${location.estado ? `, ${location.estado}` : ''}`
+      : `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+    : null;
 
   async function cadastrar() {
     const nomeLimpo = nome.trim();
