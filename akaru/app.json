@@ -7,11 +7,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1B4D1E"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "br.com.fiap.akaru"
@@ -33,7 +28,14 @@
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#1B4D1E"
+        }
+      ],
       "expo-font"
     ],
     "experiments": {

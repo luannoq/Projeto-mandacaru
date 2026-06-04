@@ -149,6 +149,11 @@ export default function HomeScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* FAB do IAkaru */}
+      <Pressable style={styles.fab} onPress={() => router.push('/iakaru')} accessibilityLabel="Abrir IAkaru">
+        <Ionicons name="chatbubbles" size={26} color={colors.onPrimary} />
+      </Pressable>
     </View>
   );
 }
@@ -213,4 +218,21 @@ const styles = StyleSheet.create({
   consultaNome: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
   consultaData: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted, textTransform: 'uppercase', marginTop: 2 },
   vazio: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted },
+
+  fab: {
+    position: 'absolute',
+    right: spacing.screen,
+    bottom: spacing.screen,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,
+  },
 });

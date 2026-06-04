@@ -148,6 +148,18 @@ export default function ResultadoScreen() {
             })}
           </View>
 
+          {/* Perguntar ao IAkaru */}
+          <Pressable
+            style={styles.cardIAkaru}
+            onPress={() => router.push(`/iakaru?culturaId=${rec.culturaId}`)}
+          >
+            <View style={styles.iakaruIcone}>
+              <Ionicons name="chatbubbles-outline" size={20} color={colors.onPrimary} />
+            </View>
+            <Text style={styles.iakaruTexto}>Perguntar ao IAkaru sobre {rec.nome}</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+          </Pressable>
+
           {/* Ações */}
           <View style={styles.acoes}>
             <Button titulo="Salvar no histórico" onPress={salvar} carregando={salvando} />
@@ -204,6 +216,20 @@ const styles = StyleSheet.create({
   detalheTexto: { flex: 1, gap: 2 },
   detalheTitulo: { fontFamily: fonts.bold, fontSize: 14, color: colors.primary },
   detalheDesc: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 19 },
+
+  cardIAkaru: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.gap,
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.accent,
+    borderRadius: radius.card,
+    padding: spacing.screen,
+    ...shadow.card,
+  },
+  iakaruIcone: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  iakaruTexto: { flex: 1, fontFamily: fonts.bold, fontSize: 14, color: colors.primary },
 
   acoes: { gap: spacing.gap, marginTop: spacing.stack },
 });
