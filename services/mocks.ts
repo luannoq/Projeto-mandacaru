@@ -151,12 +151,12 @@ export const mockHistorico: ItemHistorico[] = [
 ];
 
 // --- Sobre o App (Perfil) ---
+// O hash do commit não fica aqui: vem de constants/commit.ts (gerado a partir do Git).
 export const mockSobreApp = {
   nome: 'Akaru',
   slogan: 'Plantio inteligente, colheita certa',
   versao: '1.0.0',
   desenvolvidoPor: 'Turma ADS — FIAP',
-  commit: '#a3f2c1',
 };
 
 // --- Chat IAkaru ---

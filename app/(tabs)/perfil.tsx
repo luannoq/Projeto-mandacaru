@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { mockSobreApp } from '../../services/mocks';
+import { GIT_COMMIT_HASH } from '../../constants/commit';
 import { colors, spacing, radius, fonts, shadow } from '../../constants/theme';
 
 type Info = { icone: keyof typeof Ionicons.glyphMap; label: string; valor: string; mono?: boolean };
@@ -21,7 +22,7 @@ export default function PerfilScreen() {
   const infos: Info[] = [
     { icone: 'person-outline', label: 'Desenvolvido por', valor: mockSobreApp.desenvolvidoPor },
     { icone: 'code-slash-outline', label: 'Versão do build', valor: mockSobreApp.versao },
-    { icone: 'git-commit-outline', label: 'Commit', valor: mockSobreApp.commit, mono: true },
+    { icone: 'git-commit-outline', label: 'Commit', valor: `#${GIT_COMMIT_HASH}`, mono: true },
   ];
 
   function confirmarSaida() {
