@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akaru - Plantio Inteligente</title>
+
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Poppins / Public Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- React and Friends -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#003609",
+                        "primary-container": "#1b4d1e",
+                        "on-primary": "#ffffff",
+                        "secondary": "#1b6d24",
+                        "secondary-container": "#a0f399",
+                        "on-secondary-container": "#217128",
+                        "tertiary": "#52172e",
+                        "tertiary-container": "#6e2d44",
+                        "background": "#fcf9f3",
+                        "surface": "#fcf9f3",
+                        "surface-variant": "#e5e2dc",
+                        "surface-container": "#f0eee8",
+                        "surface-container-low": "#f6f3ed",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#ebe8e2",
+                        "surface-container-highest": "#e5e2dc",
+                        "on-surface": "#1c1c18",
+                        "on-surface-variant": "#41493f",
+                        "outline": "#72796e",
+                        "outline-variant": "#c1c9bc",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "muted-gray": "#757575",
+                        "warning-bg": "#fff8e1",
+                        "warning-icon": "#f9a825",
+                        "warning-text": "#f57f17",
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "input": "12px"
+                    },
+                    spacing: {
+                        "section-gap": "32px",
+                        "stack-lg": "24px",
+                        "stack-md": "16px",
+                        "screen-padding-h": "16px",
+                        "stack-sm": "8px",
+                        "gutter": "12px",
+                        "input-h": "48px"
+                    },
+                    fontFamily: {
+                        sans: ["Public Sans", "Poppins", "sans-serif"],
+                        "headline": ["Poppins", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Public Sans', 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .input-icon-wrapper .material-symbols-outlined {
+            color: #757575;
+        }
+        input:focus + .input-icon-wrapper .material-symbols-outlined {
+            color: #1b4d1e;
+        }
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .pt-safe {
+            padding-top: env(safe-area-inset-top);
+        }
+        /* Hidden scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // --- Shared Components ---
+
+        const BottomNav = () => {
+            const navigate = useNavigate();
+            const location = useLocation();
+
+            const items = [
+                { path: '/home', icon: 'home', label: 'Início' },
+                { path: '/new-analysis', icon: 'add_chart', label: 'Análise' },
+                { path: '/history', icon: 'history', label: 'Histórico' },
+                { path: '/profile', icon: 'person', label: 'Perfil' }
+            ];
+
+            return (
+                <nav className="fixed bottom-0 w-full z-50 bg-surface-container-lowest border-t border-surface-variant flex justify-around items-center px-4 h-[80px] pb-safe md:max-w-md md:left-1/2 md:-translate-x-1/2">
+                    {items.map((item) => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <button
+                                key={item.path}
+                                onClick={() => navigate(item.path)}
+                                className={`flex flex-col items-center justify-center transition-all duration-200 active:scale-95 ${isActive ? 'bg-secondary-container text-on-secondary-container rounded-xl px-4 py-1' : 'text-on-surface-variant w-16 h-14 rounded-xl hover:bg-surface-container-low'}`}
+                            >
+                                <span className="material-symbols-outlined mb-1" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                                    {item.icon}
+                                </span>
+                                <span className="text-[12px] font-medium leading-none">{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
+            );
+        };
+
+        const Layout = ({ children, showNav = true, title = "", backPath = null, actionIcon = null, onAction = null }) => {
+            const navigate = useNavigate();
+            return (
+                <div className="min-h-screen flex flex-col max-w-md mx-auto relative bg-surface-container-low overflow-x-hidden">
+                    {(title || backPath || actionIcon) && (
+                        <header className="fixed top-0 w-full max-w-md z-50 bg-primary-container h-16 flex items-center px-screen-padding-h text-on-primary shadow-md">
+                            {backPath && (
+                                <button onClick={() => navigate(backPath)} className="w-10 h-10 flex items-center justify-center -ml-2 text-on-primary active:opacity-70 transition-opacity">
+                                    <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+                                </button>
+                            )}
+                            <h1 className="font-semibold text-lg ml-2 flex-1">{title}</h1>
+                            {actionIcon && (
+                                <button onClick={onAction} className="text-on-primary p-2 flex items-center justify-center active:scale-95 transition-transform">
+                                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>{actionIcon}</span>
+                                </button>
+                            )}
+                        </header>
+                    )}
+                    <main className={`${(title || backPath) ? 'pt-16' : ''} ${showNav ? 'pb-20' : ''} flex-1 overflow-y-auto no-scrollbar`}>
+                        {children}
+                    </main>
+                    {showNav && <BottomNav />}
+                </div>
+            );
+        };
+
+        // --- Screens ---
+
+        const LoginScreen = () => {
+            const navigate = useNavigate();
+            const [showPassword, setShowPassword] = useState(false);
+
+            return (
+                <div className="min-h-screen flex flex-col justify-center px-screen-padding-h py-section-gap font-body-md text-on-background bg-[#F5F2EC]">
+                    <header className="flex flex-col items-center mb-section-gap text-center">
+                        <div className="w-[120px] h-[120px] bg-primary-container rounded-full flex items-center justify-center mb-stack-lg border-4 border-white shadow-lg overflow-hidden">
+                             <img src="https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=200&h=200&fit=crop" alt="Logo" className="w-full h-full object-cover" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-primary-container mb-1">Bem-vindo de volta</h1>
+                        <p className="text-muted-gray">Entre na sua conta</p>
+                    </header>
+
+                    <main className="w-full max-w-md mx-auto flex flex-col gap-stack-md">
+                        <div className="relative w-full">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-muted-gray">
+                                <span className="material-symbols-outlined">mail</span>
+                            </div>
+                            <input className="w-full h-input-h pl-12 pr-4 bg-white border border-outline-variant rounded-xl focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none placeholder:text-muted-gray" placeholder="E-mail" type="email" />
+                        </div>
+
+                        <div className="relative w-full">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-muted-gray">
+                                <span className="material-symbols-outlined">lock</span>
+                            </div>
+                            <input 
+                                className="w-full h-input-h pl-12 pr-12 bg-white border border-outline-variant rounded-xl focus:ring-1 focus:ring-primary-container focus:border-primary-container outline-none placeholder:text-muted-gray" 
+                                placeholder="Senha" 
+                                type={showPassword ? "text" : "password"} 
+                            />
+                            <button 
+                                className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-gray hover:text-primary-container transition-colors"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                <span className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                            </button>
+                        </div>
+
+                        <button 
+                            onClick={() => navigate('/home')}
+                            className="w-full h-input-h bg-primary-container text-white font-bold rounded-xl hover:bg-primary transition-all active:scale-[0.98] mt-2 shadow-md"
+                        >
+                            Entrar
+                        </button>
+
+                        <div className="flex items-center my-4">
+                            <div className="flex-grow border-t border-outline-variant"></div>
+                            <span className="mx-4 text-muted-gray text-xs font-semibold uppercase tracking-wider">ou</span>
+                            <div className="flex-grow border-t border-outline-variant"></div>
+                        </div>
+
+                        <button 
+                            onClick={() => navigate('/register')}
+                            className="w-full h-input-h bg-transparent border-2 border-primary-container text-primary-container font-bold rounded-xl hover:bg-surface-container-low transition-colors active:scale-[0.98]"
+                        >
+                            Criar conta
+                        </button>
+                    </main>
+
+                    <footer className="mt-section-gap text-center">
+                        <a className="text-sm text-primary-container underline font-medium" href="#">Esqueceu sua senha?</a>
+                    </footer>
+                </div>
+            );
+        };
+
+        const RegisterScreen = () => {
+            const navigate = useNavigate();
+            const [showPass, setShowPass] = useState(false);
+
+            return (
+                <div className="min-h-screen bg-surface-container-low flex flex-col items-center">
+                    <div className="w-full max-w-md min-h-screen flex flex-col px-screen-padding-h pt-stack-md pb-stack-lg relative">
+                        <button onClick={() => navigate('/')} className="h-12 w-12 flex items-center justify-start text-on-surface -ml-2 mb-stack-sm active:scale-95 transition-transform">
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+
+                        <header className="mb-section-gap">
+                            <h1 className="text-2xl font-bold text-primary-container mb-1">Criar conta</h1>
+                            <p className="text-on-surface-variant">Preencha seus dados para começar</p>
+                        </header>
+
+                        <form className="flex flex-col gap-stack-md w-full">
+                            <div className="flex items-center bg-white border border-outline-variant rounded-xl h-[48px] px-4 focus-within:border-primary-container focus-within:ring-1 focus-within:ring-primary-container shadow-sm transition-all">
+                                <span className="material-symbols-outlined text-outline mr-3">person</span>
+                                <input className="flex-1 bg-transparent border-none p-0 outline-none placeholder:text-outline" placeholder="Nome completo" required type="text" />
+                            </div>
+
+                            <div className="flex items-center bg-white border border-outline-variant rounded-xl h-[48px] px-4 focus-within:border-primary-container focus-within:ring-1 focus-within:ring-primary-container shadow-sm transition-all">
+                                <span className="material-symbols-outlined text-outline mr-3">mail</span>
+                                <input className="flex-1 bg-transparent border-none p-0 outline-none placeholder:text-outline" placeholder="E-mail" required type="email" />
+                            </div>
+
+                            <div className="flex items-center bg-white border border-outline-variant rounded-xl h-[48px] px-4 focus-within:border-primary-container focus-within:ring-1 focus-within:ring-primary-container shadow-sm transition-all">
+                                <span className="material-symbols-outlined text-outline mr-3">lock</span>
+                                <input className="flex-1 bg-transparent border-none p-0 outline-none placeholder:text-outline" placeholder="Senha" required type={showPass ? "text" : "password"} />
+                                <button type="button" onClick={() => setShowPass(!showPass)} className="text-outline ml-2">
+                                    <span className="material-symbols-outlined">{showPass ? 'visibility' : 'visibility_off'}</span>
+                                </button>
+                            </div>
+
+                            <div className="flex items-center bg-white border border-outline-variant rounded-xl h-[48px] px-4 focus-within:border-primary-container focus-within:ring-1 focus-within:ring-primary-container shadow-sm transition-all">
+                                <span className="material-symbols-outlined text-outline mr-3">lock</span>
+                                <input className="flex-1 bg-transparent border-none p-0 outline-none placeholder:text-outline" placeholder="Confirmar senha" required type="password" />
+                            </div>
+
+                            <div className="mt-2 flex items-center justify-between bg-white border border-outline-variant rounded-xl p-4 shadow-sm">
+                                <div className="flex items-center">
+                                    <span className="material-symbols-outlined text-primary-container mr-3">location_on</span>
+                                    <span className="text-on-surface">Sua localização</span>
+                                </div>
+                                <button className="bg-secondary-container text-on-secondary-container text-xs font-bold px-3 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all" type="button">
+                                    Usar GPS
+                                </button>
+                            </div>
+
+                            <div className="p-4 bg-[#C8E6C9] rounded-xl flex items-center gap-3">
+                                <span className="material-symbols-outlined text-primary-container">shield</span>
+                                <p className="text-xs font-medium text-primary-container">
+                                    Seus dados estão seguros e não serão compartilhados com terceiros.
+                                </p>
+                            </div>
+                        </form>
+
+                        <div className="flex-grow"></div>
+
+                        <button 
+                            onClick={() => navigate('/home')}
+                            className="w-full h-[48px] bg-primary-container text-white font-bold rounded-xl mt-8 mb-4 shadow-md active:scale-[0.98] transition-all"
+                        >
+                            Criar conta
+                        </button>
+
+                        <div className="text-center text-sm text-on-surface-variant mb-6">
+                            Já tem uma conta? <button onClick={() => navigate('/')} className="font-bold text-primary-container hover:underline ml-1">Entrar</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const HomeScreen = () => {
+            const navigate = useNavigate();
+            return (
+                <Layout showNav={true}>
+                    <header className="bg-primary-container text-white p-screen-padding-h pt-safe flex justify-between items-center h-20 shadow-md">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold">
+                                JD
+                            </div>
+                            <h1 className="font-bold text-lg">Olá, Produtor</h1>
+                        </div>
+                        <button className="text-on-primary p-2 active:opacity-70">
+                            <span className="material-symbols-outlined">notifications</span>
+                        </button>
+                    </header>
+
+                    <main className="px-screen-padding-h py-6 flex flex-col gap-6">
+                        <section>
+                            <div className="bg-white border border-outline-variant rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-primary-container">São Paulo, SP</h2>
+                                        <p className="text-sm text-outline">Parcialmente nublado</p>
+                                    </div>
+                                    <span className="text-3xl font-bold text-primary-container">24°C</span>
+                                </div>
+                                <div className="flex gap-4 pt-4 border-t border-surface-variant">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-outline" style={{ fontVariationSettings: "'FILL' 1" }}>cloud</span>
+                                        <div>
+                                            <p className="text-[10px] text-outline uppercase font-bold">Umidade</p>
+                                            <p className="text-sm font-bold text-on-surface">68%</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-outline" style={{ fontVariationSettings: "'FILL' 1" }}>water_drop</span>
+                                        <div>
+                                            <p className="text-[10px] text-outline uppercase font-bold">Chuva</p>
+                                            <p className="text-sm font-bold text-on-surface">12mm</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="flex flex-col gap-3">
+                            <h2 className="text-lg font-bold text-primary-container">O que plantar hoje?</h2>
+                            <button 
+                                onClick={() => navigate('/new-analysis')}
+                                className="w-full h-12 bg-primary-container text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all"
+                            >
+                                <span className="material-symbols-outlined">grass</span>
+                                Nova análise
+                            </button>
+                        </section>
+
+                        <section className="flex flex-col gap-3">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-lg font-bold text-primary-container">Últimas consultas</h2>
+                                <button onClick={() => navigate('/history')} className="text-sm font-bold text-primary-container">Ver tudo</button>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <div onClick={() => navigate('/recommendation/milho')} className="bg-white border border-outline-variant rounded-xl p-4 flex justify-between items-center active:bg-surface-variant cursor-pointer transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-2xl">🌽</div>
+                                        <div>
+                                            <h3 className="font-bold text-on-surface">Milho</h3>
+                                            <p className="text-[10px] text-outline uppercase">Hoje, 14h32</p>
+                                        </div>
+                                    </div>
+                                    <div className="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-3 py-1 rounded-full uppercase">
+                                        Ideal
+                                    </div>
+                                </div>
+                                <div onClick={() => navigate('/recommendation/cafe')} className="bg-white border border-outline-variant rounded-xl p-4 flex justify-between items-center active:bg-surface-variant cursor-pointer transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-2xl">☕</div>
+                                        <div>
+                                            <h3 className="font-bold text-on-surface">Café</h3>
+                                            <p className="text-[10px] text-outline uppercase">Ontem, 09h15</p>
+                                        </div>
+                                    </div>
+                                    <div className="bg-surface-variant text-on-surface-variant border border-outline-variant text-[10px] font-bold px-3 py-1 rounded-full uppercase">
+                                        Atenção
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+                </Layout>
+            );
+        };
+
+        const NewAnalysisScreen = () => {
+            const navigate = useNavigate();
+            const cultures = [
+                { id: 'milho', name: 'Milho', emoji: '🌽' },
+                { id: 'feijao', name: 'Feijão', emoji: '🫘' },
+                { id: 'mandioca', name: 'Mandioca', emoji: '🥔' },
+                { id: 'tomate', name: 'Tomate', emoji: '🍅' },
+                { id: 'arroz', name: 'Arroz', emoji: '🌾' },
+                { id: 'soja', name: 'Soja', emoji: '🌱', selected: true },
+                { id: 'cafe', name: 'Café', emoji: '☕' },
+                { id: 'batata', name: 'Batata', emoji: '🥔' },
+                { id: 'alface', name: 'Alface', emoji: '🥬' },
+                { id: 'cebola', name: 'Cebola', emoji: 'onion' },
+                { id: 'pimentao', name: 'Pimentão', emoji: '🫑' },
+                { id: 'melancia', name: 'Melancia', emoji: '🍉' },
+            ];
+
+            const [selected, setSelected] = useState('soja');
+
+            return (
+                <Layout showNav={true} title="Nova análise" backPath="/home">
+                    <main className="px-screen-padding-h py-6 flex flex-col gap-6 pb-24">
+                        <section className="relative flex items-center w-full h-[52px] bg-white rounded-xl border-2 border-primary-fixed focus-within:border-primary-container shadow-sm transition-all">
+                            <span className="material-symbols-outlined text-outline ml-4 mr-2">search</span>
+                            <input className="flex-1 h-full bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline" placeholder="Buscar cultura..." type="text"/>
+                        </section>
+
+                        <section className="flex flex-col">
+                            <h2 className="text-[11px] uppercase font-bold tracking-widest text-outline mb-4">Culturas Disponíveis</h2>
+                            <div className="grid grid-cols-3 gap-3">
+                                {cultures.map(culture => (
+                                    <button 
+                                        key={culture.id}
+                                        onClick={() => setSelected(culture.id)}
+                                        className={`rounded-xl p-3 flex flex-col items-center justify-center gap-2 aspect-square active:scale-95 transition-all shadow-sm ${selected === culture.id ? 'bg-[#C8E6C9] border-2 border-primary-container' : 'bg-white border border-surface-variant'}`}
+                                    >
+                                        <span className="text-3xl">{culture.emoji === 'onion' ? '🧅' : culture.emoji}</span>
+                                        <span className="text-xs font-bold text-primary-container">{culture.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+
+                        <section className="flex flex-col gap-2">
+                            <label className="text-sm font-bold text-primary-container" htmlFor="additional-details">Detalhes adicionais (opcional)</label>
+                            <textarea 
+                                className="w-full bg-white border border-surface-variant rounded-xl p-4 focus:border-primary-container focus:ring-1 focus:ring-primary-container resize-none transition-all shadow-sm" 
+                                id="additional-details" 
+                                placeholder="Ex: meu solo é argiloso, não tenho irrigação..." 
+                                rows="3"
+                            ></textarea>
+                        </section>
+                    </main>
+
+                    <div className="fixed bottom-20 left-0 w-full px-screen-padding-h pb-4 pt-4 bg-gradient-to-t from-surface-container-low via-surface-container-low to-transparent z-40 md:max-w-md md:left-1/2 md:-translate-x-1/2">
+                        <button 
+                            onClick={() => navigate('/recommendation/milho')}
+                            className="w-full h-12 bg-primary-container text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all"
+                        >
+                            Analisar
+                        </button>
+                    </div>
+                </Layout>
+            );
+        };
+
+        const RecommendationScreen = () => {
+            const navigate = useNavigate();
+            return (
+                <Layout showNav={false} title="Recomendação" backPath="/home" actionIcon="share">
+                    <main className="px-screen-padding-h py-6 flex flex-col gap-4 max-w-md mx-auto mb-6">
+                        <section className="bg-white rounded-xl border border-surface-variant flex flex-col items-center py-8 px-4 text-center shadow-md">
+                            <div className="text-[64px] mb-2 leading-none">🌽</div>
+                            <h2 className="text-2xl font-bold text-primary-container mb-2">Milho</h2>
+                            <div className="flex items-center text-on-surface-variant text-sm font-medium mb-3">
+                                <span className="material-symbols-outlined text-sm mr-1" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
+                                <span>São Paulo, SP</span>
+                            </div>
+                            <div className="inline-flex px-4 py-1 rounded-full bg-[#C8E6C9] text-primary-container text-xs font-bold border border-primary-container/20">
+                                ✓ Condições ideais
+                            </div>
+                        </section>
+
+                        <div className="flex flex-col gap-3">
+                            {[
+                                { icon: 'calendar_month', title: 'Época ideal', desc: 'Plantio recomendado entre outubro e dezembro', color: 'bg-[#C8E6C9]' },
+                                { icon: 'straighten', title: 'Espaçamento', desc: '80cm entre linhas, 20cm entre plantas', color: 'bg-[#C8E6C9]' },
+                                { icon: 'water_drop', title: 'Irrigação', desc: 'Necessita irrigação moderada, 500mm por ciclo', color: 'bg-[#E3F2FD]', iconColor: 'text-blue-600' },
+                                { icon: 'warning', title: 'Alertas de risco', desc: 'Risco de seca em janeiro — monitore a previsão', color: 'bg-warning-bg', iconColor: 'text-warning-icon', textColor: 'text-warning-text' },
+                            ].map((item, idx) => (
+                                <article key={idx} className={`${item.color} bg-white rounded-xl border border-surface-variant p-4 flex gap-4 items-start shadow-sm`}>
+                                    <div className={`w-10 h-10 flex items-center justify-center rounded-lg shrink-0 ${item.color}`}>
+                                        <span className={`material-symbols-outlined ${item.iconColor || 'text-primary-container'}`} style={{ fontVariationSettings: "'FILL' 1" }}>{item.icon}</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-primary-container">{item.title}</h3>
+                                        <p className={`text-sm ${item.textColor || 'text-on-surface-variant'}`}>{item.desc}</p>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-col gap-3 mt-4">
+                            <button className="w-full h-12 bg-primary-container text-white font-bold rounded-xl shadow-md active:scale-95 transition-all">
+                                Salvar no histórico
+                            </button>
+                            <button onClick={() => navigate('/new-analysis')} className="w-full h-12 bg-transparent border-2 border-outline text-primary-container font-bold rounded-xl active:scale-95 transition-all">
+                                Nova análise
+                            </button>
+                        </div>
+                    </main>
+                </Layout>
+            );
+        };
+
+        const HistoryScreen = () => {
+            const navigate = useNavigate();
+            const historyItems = [
+                { emoji: '🌽', name: 'Milho', date: 'Hoje 14h32', status: 'Ideal', statusColor: 'bg-[#C8E6C9] text-[#1B4D1E]' },
+                { emoji: '☕', name: 'Café', date: 'Ontem 09h15', status: 'Atenção', statusColor: 'bg-[#FFFDE7] text-[#F57F17]' },
+                { emoji: '🫘', name: 'Feijão', date: '24/05 16h40', status: 'Ideal', statusColor: 'bg-[#C8E6C9] text-[#1B4D1E]' },
+                { emoji: '🍅', name: 'Tomate', date: '22/05 11h20', status: 'Risco', statusColor: 'bg-[#FFEBEE] text-[#C62828]' },
+            ];
+
+            return (
+                <Layout showNav={true} title="Histórico" backPath="/home">
+                    <main className="flex-1 w-full max-w-3xl mx-auto px-screen-padding-h py-6 flex flex-col gap-6">
+                        <div className="relative w-full">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-gray">
+                                <span className="material-symbols-outlined">search</span>
+                            </div>
+                            <input className="w-full h-12 pl-12 pr-4 bg-white border border-outline-variant rounded-xl text-sm focus:ring-1 focus:ring-primary-container outline-none transition-all shadow-sm" placeholder="Buscar no histórico..." type="text" />
+                        </div>
+
+                        <section className="flex flex-col gap-4">
+                            <h2 className="text-[11px] font-bold text-muted-gray tracking-widest uppercase">Consultas Recentes</h2>
+                            <div className="flex flex-col gap-2">
+                                {historyItems.map((item, idx) => (
+                                    <div 
+                                        key={idx} 
+                                        onClick={() => navigate('/recommendation/milho')}
+                                        className="bg-white rounded-xl p-3 flex items-center justify-between border border-surface-dim active:bg-surface-container-low transition-all cursor-pointer shadow-sm"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-11 h-11 bg-[#C8E6C9] flex items-center justify-center text-2xl rounded-lg shadow-inner">
+                                                {item.emoji}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-on-background">{item.name}</span>
+                                                <span className="text-xs text-muted-gray">{item.date}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`px-2.5 py-1 rounded-full font-bold text-[10px] uppercase ${item.statusColor}`}>
+                                                {item.status}
+                                            </span>
+                                            <span className="material-symbols-outlined text-muted-gray text-xl">chevron_right</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-4 p-8 bg-white border-2 border-dashed border-[#C8E6C9] rounded-xl flex flex-col items-center justify-center text-center">
+                                <span className="material-symbols-outlined text-secondary text-4xl mb-2">eco</span>
+                                <p className="text-xs text-muted-gray font-medium">Suas próximas análises aparecerão aqui.</p>
+                            </div>
+                        </section>
+                    </main>
+                </Layout>
+            );
+        };
+
+        const ProfileScreen = () => {
+            const navigate = useNavigate();
+            return (
+                <Layout showNav={true} title="Sobre o app" backPath="/home">
+                    <main className="flex-1 px-screen-padding-h py-8 space-y-8">
+                        <section className="flex flex-col items-center text-center">
+                            <div className="w-20 h-20 rounded-full bg-primary-container flex items-center justify-center mb-4 shadow-lg border-4 border-white overflow-hidden">
+                                <span className="text-3xl font-bold text-white">A</span>
+                            </div>
+                            <h2 className="text-2xl font-bold text-primary mb-1">Akaru</h2>
+                            <p className="text-sm text-on-surface-variant italic mb-4">Plantio inteligente, colheita certa</p>
+                            <span className="inline-flex bg-secondary-container text-on-secondary-container text-xs font-bold px-4 py-1.5 rounded-full">
+                                v1.0.0
+                            </span>
+                        </section>
+
+                        <section className="bg-white rounded-xl border border-surface-variant divide-y divide-surface-variant overflow-hidden shadow-md">
+                            {[
+                                { icon: 'person', label: 'Desenvolvido por', value: 'Turma ADS — FIAP' },
+                                { icon: 'code', label: 'Versão do build', value: '1.0.0' },
+                                { icon: 'device_hub', label: 'Commit', value: '#a3f2c1', isMono: true },
+                            ].map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-4">
+                                    <div className="flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-primary-container">{item.icon}</span>
+                                        <span className="text-sm font-medium text-on-surface">{item.label}</span>
+                                    </div>
+                                    <span className={`text-sm text-on-surface-variant ${item.isMono ? 'font-mono bg-surface-container-low px-2 py-0.5 rounded' : ''}`}>{item.value}</span>
+                                </div>
+                            ))}
+                        </section>
+
+                        <section className="bg-white rounded-xl border border-surface-variant divide-y divide-surface-variant overflow-hidden shadow-md">
+                            <button className="w-full flex items-center justify-between p-4 active:bg-surface-container-low transition-colors text-left">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+                                    <span className="text-sm font-medium text-on-surface">Política de privacidade</span>
+                                </div>
+                                <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+                            </button>
+                            <button className="w-full flex items-center justify-between p-4 active:bg-surface-container-low transition-colors text-left">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>description</span>
+                                    <span className="text-sm font-medium text-on-surface">Termos de uso</span>
+                                </div>
+                                <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+                            </button>
+                        </section>
+
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="w-full flex items-center justify-center gap-2 py-4 px-4 border-2 border-error rounded-xl bg-transparent active:bg-error-container/20 transition-all text-error font-bold"
+                        >
+                            <span className="material-symbols-outlined">logout</span>
+                            <span>Sair da conta</span>
+                        </button>
+
+                        <div className="pt-4 pb-8 text-center">
+                            <p className="text-[10px] text-on-surface-variant opacity-60 uppercase font-bold tracking-widest">Global Solution 2026/1 — FIAP</p>
+                        </div>
+                    </main>
+                </Layout>
+            );
+        };
+
+        const App = () => {
+            return (
+                <MemoryRouter>
+                    <Routes>
+                        <Route path="/" element={<LoginScreen />} />
+                        <Route path="/register" element={<RegisterScreen />} />
+                        <Route path="/home" element={<HomeScreen />} />
+                        <Route path="/new-analysis" element={<NewAnalysisScreen />} />
+                        <Route path="/recommendation/:id" element={<RecommendationScreen />} />
+                        <Route path="/history" element={<HistoryScreen />} />
+                        <Route path="/profile" element={<ProfileScreen />} />
+                    </Routes>
+                </MemoryRouter>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
