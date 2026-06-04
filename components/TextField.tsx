@@ -3,7 +3,15 @@
  * botão de mostrar/ocultar à direita. Segue o design system.
  */
 import { useState } from 'react';
-import { View, TextInput, Pressable, StyleSheet, type TextInputProps, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  View,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  type TextInputProps,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, inputHeight, fonts, spacing } from '../constants/theme';
 

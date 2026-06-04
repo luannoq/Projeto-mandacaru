@@ -68,7 +68,9 @@ export default function AnaliseScreen() {
     }
     router.push({
       pathname: '/resultado',
-      params: detalhes.trim() ? { culturaId: selecionada, detalhes: detalhes.trim() } : { culturaId: selecionada },
+      params: detalhes.trim()
+        ? { culturaId: selecionada, detalhes: detalhes.trim() }
+        : { culturaId: selecionada },
     });
   }
 
@@ -151,7 +153,11 @@ export default function AnaliseScreen() {
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: colors.background },
-  header: { backgroundColor: colors.primary, paddingHorizontal: spacing.screen, paddingBottom: spacing.screen },
+  header: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.screen,
+    paddingBottom: spacing.screen,
+  },
   headerTitulo: { fontFamily: fonts.bold, fontSize: 18, color: colors.onPrimary },
 
   conteudo: { padding: spacing.screen, gap: spacing.section, paddingBottom: spacing.section },
@@ -170,11 +176,23 @@ const styles = StyleSheet.create({
   },
   buscaInput: { flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.text, padding: 0 },
 
-  label: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 1, color: colors.muted, textTransform: 'uppercase' },
+  label: {
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    letterSpacing: 1,
+    color: colors.muted,
+    textTransform: 'uppercase',
+  },
   vazio: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, marginTop: spacing.stack },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.gap },
-  celula: { borderRadius: radius.card, alignItems: 'center', justifyContent: 'center', gap: spacing.stack, ...shadow.card },
+  celula: {
+    borderRadius: radius.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.stack,
+    ...shadow.card,
+  },
   celulaInativa: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   celulaAtiva: { backgroundColor: colors.accent, borderWidth: 2, borderColor: colors.primary },
   celulaEmoji: { fontSize: 30 },

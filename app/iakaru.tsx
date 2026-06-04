@@ -45,8 +45,8 @@ function TypingDots() {
           Animated.delay(i * 160),
           Animated.timing(dot, { toValue: 1, duration: 320, useNativeDriver: true }),
           Animated.timing(dot, { toValue: 0.3, duration: 320, useNativeDriver: true }),
-        ])
-      )
+        ]),
+      ),
     );
     animacoes.forEach((a) => a.start());
     return () => animacoes.forEach((a) => a.stop());
@@ -114,7 +114,11 @@ export default function IAkaruScreen() {
     } catch {
       setMensagens((prev) => [
         ...prev,
-        { id: proximoId(), autor: 'iakaru', texto: 'Desculpe, não consegui responder agora. Tente novamente.' },
+        {
+          id: proximoId(),
+          autor: 'iakaru',
+          texto: 'Desculpe, não consegui responder agora. Tente novamente.',
+        },
       ]);
     } finally {
       setDigitando(false);
@@ -158,7 +162,7 @@ export default function IAkaruScreen() {
                   <Text style={styles.textoIA}>{m.texto}</Text>
                 </View>
               </View>
-            )
+            ),
           )}
           {digitando && <TypingDots />}
         </ScrollView>
@@ -211,9 +215,20 @@ const styles = StyleSheet.create({
 
   linhaIA: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.stack, maxWidth: '85%' },
 
-  bolha: { maxWidth: '75%', paddingHorizontal: spacing.screen, paddingVertical: spacing.gap, borderRadius: 16 },
+  bolha: {
+    maxWidth: '75%',
+    paddingHorizontal: spacing.screen,
+    paddingVertical: spacing.gap,
+    borderRadius: 16,
+  },
   bolhaUsuario: { alignSelf: 'flex-end', backgroundColor: colors.primary, borderBottomRightRadius: 4 },
-  bolhaIA: { backgroundColor: colors.surface, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: colors.border, ...shadow.card },
+  bolhaIA: {
+    backgroundColor: colors.surface,
+    borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.card,
+  },
   textoUsuario: { fontFamily: fonts.regular, fontSize: 15, color: colors.onPrimary, lineHeight: 21 },
   textoIA: { fontFamily: fonts.regular, fontSize: 15, color: colors.text, lineHeight: 21 },
 
@@ -245,6 +260,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
   },
-  enviar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  enviar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   enviarDesativado: { opacity: 0.5 },
 });

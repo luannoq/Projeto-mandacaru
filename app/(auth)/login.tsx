@@ -15,7 +15,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import TextField from '../../components/TextField';
@@ -54,10 +54,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
@@ -103,18 +100,16 @@ export default function LoginScreen() {
               <View style={styles.linha} />
             </View>
 
-            <Button
-              titulo="Criar conta"
-              variant="outline"
-              onPress={() => router.push('/cadastro')}
-            />
+            <Button titulo="Criar conta" variant="outline" onPress={() => router.push('/cadastro')} />
           </View>
 
           {/* Rodapé */}
           <View style={styles.footer}>
             <Pressable
               hitSlop={8}
-              onPress={() => Alert.alert('Recuperar senha', 'Em breve você poderá redefinir sua senha por aqui.')}
+              onPress={() =>
+                Alert.alert('Recuperar senha', 'Em breve você poderá redefinir sua senha por aqui.')
+              }
             >
               <Text style={styles.linkSenha}>Esqueceu sua senha?</Text>
             </Pressable>
@@ -157,7 +152,18 @@ const styles = StyleSheet.create({
   botaoEntrar: { marginTop: spacing.xs },
   divisor: { flexDirection: 'row', alignItems: 'center', marginVertical: spacing.gap },
   linha: { flex: 1, height: 1, backgroundColor: colors.border },
-  ou: { marginHorizontal: spacing.screen, fontFamily: fonts.semibold, fontSize: 12, color: colors.muted, letterSpacing: 1 },
+  ou: {
+    marginHorizontal: spacing.screen,
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.muted,
+    letterSpacing: 1,
+  },
   footer: { alignItems: 'center', marginTop: spacing.xl },
-  linkSenha: { fontFamily: fonts.medium, fontSize: 14, color: colors.primary, textDecorationLine: 'underline' },
+  linkSenha: {
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: colors.primary,
+    textDecorationLine: 'underline',
+  },
 });

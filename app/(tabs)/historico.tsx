@@ -4,7 +4,16 @@
  * card vazio pontilhado. Dados de listarHistorico().
  */
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -113,7 +122,11 @@ export default function HistoricoScreen() {
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: colors.background },
-  header: { backgroundColor: colors.primary, paddingHorizontal: spacing.screen, paddingBottom: spacing.screen },
+  header: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.screen,
+    paddingBottom: spacing.screen,
+  },
   headerTitulo: { fontFamily: fonts.bold, fontSize: 18, color: colors.onPrimary },
 
   conteudo: { padding: spacing.screen, gap: spacing.section, paddingBottom: spacing.xl },
@@ -132,7 +145,13 @@ const styles = StyleSheet.create({
   },
   buscaInput: { flex: 1, fontFamily: fonts.regular, fontSize: 14, color: colors.text, padding: 0 },
 
-  label: { fontFamily: fonts.bold, fontSize: 11, letterSpacing: 1, color: colors.muted, textTransform: 'uppercase' },
+  label: {
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    letterSpacing: 1,
+    color: colors.muted,
+    textTransform: 'uppercase',
+  },
 
   item: {
     backgroundColor: colors.surface,
@@ -146,7 +165,14 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   itemEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap },
-  avatar: { width: 44, height: 44, borderRadius: radius.button, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.button,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   avatarEmoji: { fontSize: 22 },
   itemNome: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
   itemData: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, marginTop: 2 },

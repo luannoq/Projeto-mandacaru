@@ -31,11 +31,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const mensagem =
-      error?.response?.data?.message ??
-      error?.message ??
-      'Não foi possível conectar ao servidor.';
+      error?.response?.data?.message ?? error?.message ?? 'Não foi possível conectar ao servidor.';
     return Promise.reject(new Error(mensagem));
-  }
+  },
 );
 
 export default api;

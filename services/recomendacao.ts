@@ -1,12 +1,7 @@
 /**
  * Service de recomendação agrícola.
  */
-import {
-  mockRecomendacoes,
-  mockCulturas,
-  recomendacaoPadrao,
-  Recomendacao,
-} from './mocks';
+import { mockRecomendacoes, mockCulturas, recomendacaoPadrao, Recomendacao } from './mocks';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

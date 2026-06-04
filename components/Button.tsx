@@ -13,7 +13,14 @@ type Props = PressableProps & {
   carregando?: boolean;
 };
 
-export default function Button({ titulo, variant = 'filled', carregando = false, disabled, style, ...props }: Props) {
+export default function Button({
+  titulo,
+  variant = 'filled',
+  carregando = false,
+  disabled,
+  style,
+  ...props
+}: Props) {
   const outline = variant === 'outline';
   return (
     <Pressable

@@ -86,7 +86,12 @@ export default function CadastroScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Voltar */}
-          <Pressable onPress={() => router.back()} hitSlop={8} style={styles.voltar} accessibilityLabel="Voltar">
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            style={styles.voltar}
+            accessibilityLabel="Voltar"
+          >
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </Pressable>
 
@@ -98,7 +103,12 @@ export default function CadastroScreen() {
 
           {/* Formulário */}
           <View style={styles.form}>
-            <TextField icon="person-outline" placeholder="Nome completo" value={nome} onChangeText={setNome} />
+            <TextField
+              icon="person-outline"
+              placeholder="Nome completo"
+              value={nome}
+              onChangeText={setNome}
+            />
             <TextField
               icon="mail-outline"
               placeholder="E-mail"
@@ -108,7 +118,13 @@ export default function CadastroScreen() {
               value={email}
               onChangeText={setEmail}
             />
-            <TextField icon="lock-closed-outline" placeholder="Senha" senha value={senha} onChangeText={setSenha} />
+            <TextField
+              icon="lock-closed-outline"
+              placeholder="Senha"
+              senha
+              value={senha}
+              onChangeText={setSenha}
+            />
             <TextField
               icon="lock-closed-outline"
               placeholder="Confirmar senha"
@@ -141,7 +157,12 @@ export default function CadastroScreen() {
             </View>
           </View>
 
-          <Button titulo="Criar conta" onPress={cadastrar} carregando={carregando} style={styles.botaoCriar} />
+          <Button
+            titulo="Criar conta"
+            onPress={cadastrar}
+            carregando={carregando}
+            style={styles.botaoCriar}
+          />
 
           <View style={styles.footer}>
             <Text style={styles.footerTexto}>Já tem uma conta?</Text>
@@ -159,7 +180,14 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   scroll: { flexGrow: 1, paddingHorizontal: spacing.screen, paddingBottom: spacing.lg },
-  voltar: { width: 40, height: 40, alignItems: 'flex-start', justifyContent: 'center', marginLeft: -8, marginTop: spacing.stack },
+  voltar: {
+    width: 40,
+    height: 40,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    marginLeft: -8,
+    marginTop: spacing.stack,
+  },
   header: { marginTop: spacing.stack, marginBottom: spacing.xl },
   titulo: { fontFamily: fonts.bold, fontSize: 24, color: colors.primary, marginBottom: spacing.xs },
   subtitulo: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted },
@@ -177,7 +205,12 @@ const styles = StyleSheet.create({
   },
   localEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap, flex: 1 },
   localTexto: { fontFamily: fonts.medium, fontSize: 14, color: colors.text },
-  gpsBtn: { backgroundColor: colors.accent, paddingHorizontal: spacing.gap, paddingVertical: spacing.stack, borderRadius: radius.button },
+  gpsBtn: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.gap,
+    paddingVertical: spacing.stack,
+    borderRadius: radius.button,
+  },
   gpsTexto: { fontFamily: fonts.bold, fontSize: 12, color: colors.primary },
   aviso: {
     flexDirection: 'row',
@@ -189,7 +222,13 @@ const styles = StyleSheet.create({
   },
   avisoTexto: { flex: 1, fontFamily: fonts.medium, fontSize: 12, color: colors.primary, lineHeight: 17 },
   botaoCriar: { marginTop: spacing.lg },
-  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: spacing.xs, marginTop: spacing.lg },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.lg,
+  },
   footerTexto: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted },
   footerLink: { fontFamily: fonts.bold, fontSize: 14, color: colors.primary },
 });

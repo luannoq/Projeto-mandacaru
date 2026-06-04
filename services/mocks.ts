@@ -108,10 +108,22 @@ export const mockRecomendacoes: Record<string, Recomendacao> = {
     status: 'Atenção',
     resumoStatus: 'Requer atenção',
     detalhes: [
-      { tipo: 'epoca', titulo: 'Época ideal', descricao: 'Plantio recomendado entre setembro e março (período chuvoso)' },
+      {
+        tipo: 'epoca',
+        titulo: 'Época ideal',
+        descricao: 'Plantio recomendado entre setembro e março (período chuvoso)',
+      },
       { tipo: 'espacamento', titulo: 'Espaçamento', descricao: '3,5m entre linhas, 0,7m entre plantas' },
-      { tipo: 'irrigacao', titulo: 'Irrigação', descricao: 'Sensível a déficit hídrico na florada — 1200mm/ano' },
-      { tipo: 'alerta', titulo: 'Alertas de risco', descricao: 'Umidade abaixo do ideal para a florada — acompanhe a previsão' },
+      {
+        tipo: 'irrigacao',
+        titulo: 'Irrigação',
+        descricao: 'Sensível a déficit hídrico na florada — 1200mm/ano',
+      },
+      {
+        tipo: 'alerta',
+        titulo: 'Alertas de risco',
+        descricao: 'Umidade abaixo do ideal para a florada — acompanhe a previsão',
+      },
     ],
   },
 };

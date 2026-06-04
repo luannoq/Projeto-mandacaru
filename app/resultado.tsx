@@ -32,7 +32,12 @@ function estiloDetalhe(tipo: DetalheRecomendacao['tipo']): EstiloDetalhe {
     case 'irrigacao':
       return { icone: 'water-outline', bg: colors.infoBg, cor: colors.infoText, textoCor: colors.muted };
     case 'alerta':
-      return { icone: 'warning-outline', bg: colors.warningBg, cor: colors.warningIcon, textoCor: colors.warningText };
+      return {
+        icone: 'warning-outline',
+        bg: colors.warningBg,
+        cor: colors.warningIcon,
+        textoCor: colors.warningText,
+      };
   }
 }
 
@@ -40,7 +45,7 @@ export default function ResultadoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ culturaId?: string }>();
-  const culturaId = Array.isArray(params.culturaId) ? params.culturaId[0] : params.culturaId ?? 'milho';
+  const culturaId = Array.isArray(params.culturaId) ? params.culturaId[0] : (params.culturaId ?? 'milho');
 
   const [rec, setRec] = useState<Recomendacao | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -212,7 +217,13 @@ const styles = StyleSheet.create({
     padding: spacing.screen,
     ...shadow.card,
   },
-  detalheIcone: { width: 40, height: 40, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center' },
+  detalheIcone: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.button,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   detalheTexto: { flex: 1, gap: 2 },
   detalheTitulo: { fontFamily: fonts.bold, fontSize: 14, color: colors.primary },
   detalheDesc: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 19 },
@@ -228,7 +239,14 @@ const styles = StyleSheet.create({
     padding: spacing.screen,
     ...shadow.card,
   },
-  iakaruIcone: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  iakaruIcone: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   iakaruTexto: { flex: 1, fontFamily: fonts.bold, fontSize: 14, color: colors.primary },
 
   acoes: { gap: spacing.gap, marginTop: spacing.stack },

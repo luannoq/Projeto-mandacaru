@@ -64,7 +64,10 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.saudacao}>Olá, {primeiroNome}</Text>
         </View>
-        <Pressable hitSlop={8} onPress={() => Alert.alert('Notificações', 'Você não tem novas notificações.')}>
+        <Pressable
+          hitSlop={8}
+          onPress={() => Alert.alert('Notificações', 'Você não tem novas notificações.')}
+        >
           <Ionicons name="notifications-outline" size={24} color={colors.onPrimary} />
         </Pressable>
       </View>
@@ -169,19 +172,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   headerEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   avatarTexto: { fontFamily: fonts.bold, color: colors.primary, fontSize: 15 },
   saudacao: { fontFamily: fonts.bold, fontSize: 18, color: colors.onPrimary },
 
   conteudo: { padding: spacing.screen, gap: spacing.section, paddingBottom: spacing.xl },
 
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.card, ...shadow.card },
+  card: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    ...shadow.card,
+  },
   cardClima: { padding: 20, gap: spacing.screen },
   climaTopo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   climaCidade: { fontFamily: fonts.bold, fontSize: 20, color: colors.primary },
   climaCondicao: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, marginTop: 2 },
   climaTemp: { fontFamily: fonts.bold, fontSize: 30, color: colors.primary },
-  climaInfos: { flexDirection: 'row', gap: spacing.section, paddingTop: spacing.screen, borderTopWidth: 1, borderTopColor: colors.border },
+  climaInfos: {
+    flexDirection: 'row',
+    gap: spacing.section,
+    paddingTop: spacing.screen,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
   climaInfo: { flexDirection: 'row', alignItems: 'center', gap: spacing.stack },
   climaLabel: { fontFamily: fonts.bold, fontSize: 10, color: colors.muted, letterSpacing: 0.5 },
   climaValor: { fontFamily: fonts.bold, fontSize: 14, color: colors.text },
@@ -216,7 +238,13 @@ const styles = StyleSheet.create({
   consultaEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap },
   consultaEmoji: { fontSize: 24 },
   consultaNome: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  consultaData: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted, textTransform: 'uppercase', marginTop: 2 },
+  consultaData: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.muted,
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
   vazio: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted },
 
   fab: {

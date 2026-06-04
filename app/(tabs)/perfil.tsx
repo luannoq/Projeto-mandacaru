@@ -117,7 +117,11 @@ export default function PerfilScreen() {
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: colors.background },
-  header: { backgroundColor: colors.primary, paddingHorizontal: spacing.screen, paddingBottom: spacing.screen },
+  header: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.screen,
+    paddingBottom: spacing.screen,
+  },
   headerTitulo: { fontFamily: fonts.bold, fontSize: 18, color: colors.onPrimary },
 
   conteudo: { padding: spacing.screen, gap: spacing.section, paddingBottom: spacing.xl },
@@ -137,16 +141,41 @@ const styles = StyleSheet.create({
   avatarTexto: { fontFamily: fonts.bold, fontSize: 32, color: colors.onPrimary },
   nome: { fontFamily: fonts.bold, fontSize: 24, color: colors.primary },
   slogan: { fontFamily: fonts.regular, fontStyle: 'italic', fontSize: 13, color: colors.muted },
-  versaoBadge: { backgroundColor: colors.accent, paddingHorizontal: spacing.screen, paddingVertical: 6, borderRadius: radius.pill, marginTop: spacing.xs },
+  versaoBadge: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.screen,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    marginTop: spacing.xs,
+  },
   versaoTexto: { fontFamily: fonts.bold, fontSize: 12, color: colors.primary },
 
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.card, overflow: 'hidden', ...shadow.card },
-  linha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.screen },
+  card: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    overflow: 'hidden',
+    ...shadow.card,
+  },
+  linha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.screen,
+  },
   linhaBorda: { borderTopWidth: 1, borderTopColor: colors.border },
   linhaEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap },
   linhaLabel: { fontFamily: fonts.medium, fontSize: 14, color: colors.text },
   linhaValor: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted },
-  mono: { fontFamily: 'monospace', backgroundColor: colors.background, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' },
+  mono: {
+    fontFamily: 'monospace',
+    backgroundColor: colors.background,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
 
   sair: {
     flexDirection: 'row',
@@ -160,5 +189,13 @@ const styles = StyleSheet.create({
   },
   sairTexto: { fontFamily: fonts.bold, fontSize: 15, color: colors.errorText },
 
-  rodape: { textAlign: 'center', fontFamily: fonts.bold, fontSize: 10, color: colors.muted, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.6 },
+  rodape: {
+    textAlign: 'center',
+    fontFamily: fonts.bold,
+    fontSize: 10,
+    color: colors.muted,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    opacity: 0.6,
+  },
 });
