@@ -96,6 +96,7 @@ export default function AnaliseScreen() {
             value={busca}
             onChangeText={setBusca}
             autoCorrect={false}
+            accessibilityLabel="Buscar cultura"
           />
         </View>
 
@@ -113,6 +114,9 @@ export default function AnaliseScreen() {
                 <Pressable
                   key={cultura.id}
                   onPress={() => setSelecionada(cultura.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Cultura ${cultura.nome}`}
+                  accessibilityState={{ selected: ativa }}
                   style={[
                     styles.celula,
                     { width: itemSize, height: itemSize },
@@ -139,6 +143,7 @@ export default function AnaliseScreen() {
             textAlignVertical="top"
             value={detalhes}
             onChangeText={setDetalhes}
+            accessibilityLabel="Detalhes adicionais da análise (opcional)"
           />
         </View>
       </ScrollView>

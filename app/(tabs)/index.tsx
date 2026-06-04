@@ -66,6 +66,8 @@ export default function HomeScreen() {
         </View>
         <Pressable
           hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Notificações"
           onPress={() => Alert.alert('Notificações', 'Você não tem novas notificações.')}
         >
           <Ionicons name="notifications-outline" size={24} color={colors.onPrimary} />
@@ -111,7 +113,12 @@ export default function HomeScreen() {
             {/* Nova análise */}
             <View style={styles.secao}>
               <Text style={styles.secaoTitulo}>O que plantar hoje?</Text>
-              <Pressable style={styles.botaoAnalise} onPress={() => router.push('/analise')}>
+              <Pressable
+                style={styles.botaoAnalise}
+                onPress={() => router.push('/analise')}
+                accessibilityRole="button"
+                accessibilityLabel="Nova análise"
+              >
                 <Ionicons name="leaf-outline" size={20} color={colors.onPrimary} />
                 <Text style={styles.botaoAnaliseTexto}>Nova análise</Text>
               </Pressable>
@@ -121,7 +128,12 @@ export default function HomeScreen() {
             <View style={styles.secao}>
               <View style={styles.secaoHeader}>
                 <Text style={styles.secaoTitulo}>Últimas consultas</Text>
-                <Pressable hitSlop={8} onPress={() => router.push('/historico')}>
+                <Pressable
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Ver todas as consultas"
+                  onPress={() => router.push('/historico')}
+                >
                   <Text style={styles.verTudo}>Ver tudo</Text>
                 </Pressable>
               </View>
@@ -134,6 +146,8 @@ export default function HomeScreen() {
                     <Pressable
                       key={item.id}
                       style={styles.consulta}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Consulta de ${item.nome}, ${item.data}, status ${item.status}`}
                       onPress={() => router.push(`/resultado?culturaId=${item.culturaId}`)}
                     >
                       <View style={styles.consultaEsq}>
@@ -154,7 +168,12 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* FAB do IAkaru */}
-      <Pressable style={styles.fab} onPress={() => router.push('/iakaru')} accessibilityLabel="Abrir IAkaru">
+      <Pressable
+        style={styles.fab}
+        onPress={() => router.push('/iakaru')}
+        accessibilityRole="button"
+        accessibilityLabel="Abrir IAkaru, assistente de plantio"
+      >
         <Ionicons name="chatbubbles" size={26} color={colors.onPrimary} />
       </Pressable>
     </View>

@@ -90,6 +90,7 @@ export default function CadastroScreen() {
             onPress={() => router.back()}
             hitSlop={8}
             style={styles.voltar}
+            accessibilityRole="button"
             accessibilityLabel="Voltar"
           >
             <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -139,7 +140,14 @@ export default function CadastroScreen() {
                 <Ionicons name="location-outline" size={22} color={colors.primary} />
                 <Text style={styles.localTexto}>{localizacao ?? 'Sua localização'}</Text>
               </View>
-              <Pressable style={styles.gpsBtn} onPress={usarGps} disabled={buscandoGps}>
+              <Pressable
+                style={styles.gpsBtn}
+                onPress={usarGps}
+                disabled={buscandoGps}
+                accessibilityRole="button"
+                accessibilityLabel="Usar GPS para preencher a localização"
+                accessibilityState={{ disabled: buscandoGps, busy: buscandoGps }}
+              >
                 {buscandoGps ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
@@ -166,7 +174,12 @@ export default function CadastroScreen() {
 
           <View style={styles.footer}>
             <Text style={styles.footerTexto}>Já tem uma conta?</Text>
-            <Pressable hitSlop={8} onPress={() => router.replace('/login')}>
+            <Pressable
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Já tem uma conta? Entrar"
+              onPress={() => router.replace('/login')}
+            >
               <Text style={styles.footerLink}>Entrar</Text>
             </Pressable>
           </View>

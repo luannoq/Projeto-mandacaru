@@ -25,6 +25,9 @@ export default function Button({
   return (
     <Pressable
       disabled={disabled || carregando}
+      accessibilityRole="button"
+      accessibilityLabel={titulo}
+      accessibilityState={{ disabled: !!disabled || carregando, busy: carregando }}
       style={({ pressed }) => [
         styles.base,
         outline ? styles.outline : styles.filled,

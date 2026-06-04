@@ -23,9 +23,12 @@ type Props = Omit<TextInputProps, 'style'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-export default function TextField({ icon, senha = false, style, ...props }: Props) {
+export default function TextField({ icon, senha = false, style, accessibilityLabel, ...props }: Props) {
   const [focado, setFocado] = useState(false);
   const [oculto, setOculto] = useState(true);
+
+  // Sem label explícito, leitores de tela anunciam o placeholder do campo.
+  const label = accessibilityLabel ?? (typeof props.placeholder === 'string' ? props.placeholder : undefined);
 
   return (
     <View style={[styles.container, focado && styles.containerFocado, style]}>
@@ -39,6 +42,7 @@ export default function TextField({ icon, senha = false, style, ...props }: Prop
         style={styles.input}
         placeholderTextColor={colors.muted}
         secureTextEntry={senha && oculto}
+        accessibilityLabel={label}
         onFocus={() => setFocado(true)}
         onBlur={() => setFocado(false)}
         {...props}
@@ -47,6 +51,7 @@ export default function TextField({ icon, senha = false, style, ...props }: Prop
         <Pressable
           onPress={() => setOculto((v) => !v)}
           hitSlop={8}
+          accessibilityRole="button"
           accessibilityLabel={oculto ? 'Mostrar senha' : 'Ocultar senha'}
         >
           <Ionicons name={oculto ? 'eye-outline' : 'eye-off-outline'} size={20} color={colors.muted} />

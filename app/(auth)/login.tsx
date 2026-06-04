@@ -107,6 +107,8 @@ export default function LoginScreen() {
           <View style={styles.footer}>
             <Pressable
               hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Esqueceu sua senha?"
               onPress={() =>
                 Alert.alert('Recuperar senha', 'Em breve você poderá redefinir sua senha por aqui.')
               }
