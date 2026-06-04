@@ -9,6 +9,8 @@
 import { useCallback, useState } from 'react';
 import * as Location from 'expo-location';
 
+import { nomeParaUF } from '../constants/estados';
+
 export type LocationData = {
   latitude: number;
   longitude: number;
@@ -66,7 +68,8 @@ export function useLocation(): UseLocation {
         const primeiro = enderecos[0];
         if (primeiro) {
           dados.cidade = primeiro.city ?? primeiro.subregion ?? undefined;
-          dados.estado = primeiro.region ?? undefined;
+          // Converte o nome do estado para a sigla UF (ex.: "São Paulo" -> "SP").
+          dados.estado = nomeParaUF(primeiro.region) ?? undefined;
         }
       } catch {
         // Reverse geocoding falhou — mantemos só as coordenadas.
