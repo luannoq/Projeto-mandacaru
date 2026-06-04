@@ -3,14 +3,16 @@
  * botão de mostrar/ocultar à direita. Segue o design system.
  */
 import { useState } from 'react';
-import { View, TextInput, Pressable, StyleSheet, type TextInputProps } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet, type TextInputProps, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, inputHeight, fonts, spacing } from '../constants/theme';
 
-type Props = TextInputProps & {
+type Props = Omit<TextInputProps, 'style'> & {
   icon: keyof typeof Ionicons.glyphMap;
   /** Quando true, exibe o toggle de visibilidade e mascara o texto. */
   senha?: boolean;
+  /** Estilo aplicado ao container do campo. */
+  style?: StyleProp<ViewStyle>;
 };
 
 export default function TextField({ icon, senha = false, style, ...props }: Props) {

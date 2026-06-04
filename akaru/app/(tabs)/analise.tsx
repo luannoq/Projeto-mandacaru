@@ -66,10 +66,10 @@ export default function AnaliseScreen() {
       Alert.alert('Selecione uma cultura', 'Escolha uma cultura para gerar a recomendação.');
       return;
     }
-    const query = detalhes.trim()
-      ? `?culturaId=${selecionada}&detalhes=${encodeURIComponent(detalhes.trim())}`
-      : `?culturaId=${selecionada}`;
-    router.push(`/resultado${query}`);
+    router.push({
+      pathname: '/resultado',
+      params: detalhes.trim() ? { culturaId: selecionada, detalhes: detalhes.trim() } : { culturaId: selecionada },
+    });
   }
 
   return (
