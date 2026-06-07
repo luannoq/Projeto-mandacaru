@@ -12,15 +12,13 @@ escolhida e as condições climáticas da sua região.
 
 ## 👥 Integrantes
 
-| Nome         | RM              |
-| ------------ | --------------- |
-| Luann        | RM560313        |
-| Juan Pablo   | RM[A PREENCHER] |
-| Lucas Higuti | RM[A PREENCHER] |
-| Victor       | RM[A PREENCHER] |
-| Renato       | RM[A PREENCHER] |
-
-> Atualize os RMs pendentes antes da entrega no Portal FIAP.
+| Nome                              | RM       |
+| --------------------------------- | -------- |
+| Luann Noqueli Klochko             | RM560313 |
+| Juan Pablo Rebelo Coelho          | RM560445 |
+| Lucas Higuti Fontanezi            | RM561120 |
+| Victor Rodrigues De Lima Lourenco | RM560087 |
+| Renato Silva Alexandre Bezerra    | RM560928 |
 
 ---
 
