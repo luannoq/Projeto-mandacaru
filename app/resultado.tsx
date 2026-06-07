@@ -218,6 +218,17 @@ export default function ResultadoScreen() {
             })}
           </View>
 
+          {/* Resumo do agrônomo (mensagem completa do Gemini) */}
+          {rec.mensagemCompleta ? (
+            <View style={styles.resumo}>
+              <View style={styles.resumoHeader}>
+                <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+                <Text style={styles.resumoTitulo}>Resumo do agrônomo</Text>
+              </View>
+              <Markdown style={markdownStyles()}>{rec.mensagemCompleta}</Markdown>
+            </View>
+          ) : null}
+
           {/* Perguntar ao IAkaru */}
           <Pressable
             style={styles.cardIAkaru}
@@ -295,7 +306,18 @@ const styles = StyleSheet.create({
   },
   detalheTexto: { flex: 1, gap: 2 },
   detalheTitulo: { fontFamily: fonts.bold, fontSize: 14, color: colors.primary },
-  detalheDesc: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 19 },
+
+  resumo: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    padding: spacing.screen,
+    gap: spacing.stack,
+    ...shadow.card,
+  },
+  resumoHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.stack },
+  resumoTitulo: { fontFamily: fonts.bold, fontSize: 14, color: colors.primary },
 
   cardIAkaru: {
     flexDirection: 'row',
