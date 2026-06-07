@@ -96,3 +96,13 @@ export interface AtualizarRecomendacaoRequest {
   detalhes?: string;
   notaPessoal?: string;
 }
+
+// --- Chat IAkaru ---
+export interface ChatRequest {
+  mensagem: string;
+  contexto?: string;
+}
+
+export interface ChatResponse {
+  resposta: string;
+}

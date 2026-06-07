@@ -1,6 +1,6 @@
 /**
  * IAkaru — chat com o assistente agrícola (IA Generativa).
- * Disciplina Disruptive IA da GS. Respostas mockadas via services/iakaru.ts.
+ * Disciplina Disruptive IA da GS. Respostas reais do Gemini via API Java.
  *
  * Header verde com avatar, bolhas (usuário à direita / IA à esquerda),
  * indicador "digitando..." animado e input fixo com KeyboardAvoidingView.
@@ -16,13 +16,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import { mensagemInicial, enviarPergunta } from '../services/iakaru';
+import { mensagemInicial, enviarMensagem } from '../services/iakaru';
 import { MensagemChat } from '../services/mocks';
+import { handleApiError } from '../utils/handleApiError';
 import { colors, spacing, radius, fonts, shadow } from '../constants/theme';
 
 /** Avatar circular do IAkaru (folha em fundo verde claro). */
@@ -107,17 +109,11 @@ export default function IAkaruScreen() {
     setDigitando(true);
 
     try {
-      const resposta = await enviarPergunta(pergunta);
+      const contexto = culturaNome ? `Agricultor consultando sobre ${culturaNome}` : undefined;
+      const resposta = await enviarMensagem(pergunta, contexto);
       setMensagens((prev) => [...prev, { id: proximoId(), autor: 'iakaru', texto: resposta }]);
-    } catch {
-      setMensagens((prev) => [
-        ...prev,
-        {
-          id: proximoId(),
-          autor: 'iakaru',
-          texto: 'Desculpe, não consegui responder agora. Tente novamente.',
-        },
-      ]);
+    } catch (e) {
+      Alert.alert('Erro', handleApiError(e));
     } finally {
       setDigitando(false);
     }
