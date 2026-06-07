@@ -13,6 +13,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Markdown from 'react-native-markdown-display';
 
 import Button from '../components/Button';
 import LocationBadge from '../components/LocationBadge';
@@ -21,6 +22,7 @@ import { gerarRecomendacao, buscarRecomendacao } from '../services/recomendacao'
 import { salvarNoHistorico } from '../services/historico';
 import { getEmojiForCultura } from '../constants/culturas';
 import { handleApiError } from '../utils/handleApiError';
+import { markdownStyles } from '../constants/markdown';
 import type { RecomendacaoResponse } from '../types/api';
 import { colors, spacing, radius, fonts, shadow } from '../constants/theme';
 
@@ -209,7 +211,7 @@ export default function ResultadoScreen() {
                   </View>
                   <View style={styles.detalheTexto}>
                     <Text style={styles.detalheTitulo}>{d.titulo}</Text>
-                    <Text style={[styles.detalheDesc, { color: est.textoCor }]}>{d.descricao}</Text>
+                    <Markdown style={markdownStyles(est.textoCor)}>{d.descricao}</Markdown>
                   </View>
                 </View>
               );

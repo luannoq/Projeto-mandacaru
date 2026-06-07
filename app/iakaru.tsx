@@ -20,10 +20,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Markdown from 'react-native-markdown-display';
 
 import { mensagemInicial, enviarMensagem } from '../services/iakaru';
 import { MensagemChat } from '../services/mocks';
 import { handleApiError } from '../utils/handleApiError';
+import { markdownStyles } from '../constants/markdown';
 import { colors, spacing, radius, fonts, shadow } from '../constants/theme';
 
 /** Mensagem do chat, com flag de erro para estilizar a bolha. */
@@ -171,7 +173,11 @@ export default function IAkaruScreen() {
               <View key={m.id} style={styles.linhaIA}>
                 <AvatarIAkaru />
                 <View style={[styles.bolha, styles.bolhaIA, m.erro && styles.bolhaErro]}>
-                  <Text style={[styles.textoIA, m.erro && styles.textoErro]}>{m.texto}</Text>
+                  {m.erro ? (
+                    <Text style={[styles.textoIA, styles.textoErro]}>{m.texto}</Text>
+                  ) : (
+                    <Markdown style={markdownStyles()}>{m.texto}</Markdown>
+                  )}
                 </View>
               </View>
             ),
