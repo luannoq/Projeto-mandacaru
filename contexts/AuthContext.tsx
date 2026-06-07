@@ -69,7 +69,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       async signIn(email, senha) {
         const resp = await loginApi(email.trim(), senha);
-        const usuario: AuthUser = { email: resp.email, nome: resp.email.split('@')[0] };
+        // A API não retorna o nome no login. Se já houver um nome salvo para
+        // este e-mail (cadastro anterior neste device), preserva-o; senão,
+        // usa o prefixo do e-mail como fallback.
+        let nome = resp.email.split('@')[0];
+        try {
+          const raw = await AsyncStorage.getItem(STORAGE_USER_KEY);
+          if (raw) {
+            const anterior = JSON.parse(raw) as AuthUser;
+            if (anterior.email === resp.email && anterior.nome) {
+              nome = anterior.nome;
+            }
+          }
+        } catch {
+          // Ignora: usa o fallback do prefixo do e-mail.
+        }
+        const usuario: AuthUser = { email: resp.email, nome };
         await persistirSessao(resp.token, usuario);
         setUser(usuario);
       },
