@@ -13,6 +13,9 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -20,6 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import AptidaoBadge from '../../components/AptidaoBadge';
 import { listarHistorico, removerDoHistorico, limparHistorico } from '../../services/historico';
+import { atualizarRecomendacao } from '../../services/recomendacao';
 import { getEmojiForCultura } from '../../constants/culturas';
 import { handleApiError } from '../../utils/handleApiError';
 import type { RecomendacaoResponse } from '../../types/api';
@@ -43,6 +47,12 @@ export default function HistoricoScreen() {
   const [itens, setItens] = useState<RecomendacaoResponse[]>([]);
   const [busca, setBusca] = useState('');
   const [carregando, setCarregando] = useState(true);
+
+  // Edição de nota/detalhes (Update — PUT /api/recomendacao/{id}).
+  const [editando, setEditando] = useState<RecomendacaoResponse | null>(null);
+  const [notaPessoal, setNotaPessoal] = useState('');
+  const [detalhesEdicao, setDetalhesEdicao] = useState('');
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
   // Recarrega sempre que a aba ganha foco (pega análises salvas após a montagem).
   useFocusEffect(
@@ -101,6 +111,30 @@ export default function HistoricoScreen() {
     }
   }
 
+  function abrirEdicao(item: RecomendacaoResponse) {
+    setEditando(item);
+    setNotaPessoal(item.notaPessoal ?? '');
+    setDetalhesEdicao(item.detalhesUsuario ?? '');
+  }
+
+  async function salvarEdicao() {
+    if (!editando) return;
+    try {
+      setSalvandoEdicao(true);
+      const atualizada = await atualizarRecomendacao(editando.recomendacaoId, {
+        notaPessoal: notaPessoal.trim(),
+        detalhes: detalhesEdicao.trim(),
+      });
+      // Atualiza só o card editado, sem recarregar a lista toda.
+      setItens((prev) => prev.map((i) => (i.recomendacaoId === atualizada.recomendacaoId ? atualizada : i)));
+      setEditando(null);
+    } catch (e) {
+      Alert.alert('Erro', handleApiError(e));
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  }
+
   return (
     <View style={styles.tela}>
       <View style={[styles.header, { paddingTop: insets.top + spacing.gap }]}>
@@ -153,15 +187,28 @@ export default function HistoricoScreen() {
                     <View style={styles.avatar}>
                       <Text style={styles.avatarEmoji}>{getEmojiForCultura(item.cultura.nome)}</Text>
                     </View>
-                    <View>
+                    <View style={styles.itemTextos}>
                       <Text style={styles.itemNome}>{item.cultura.nome}</Text>
                       <Text style={styles.itemData}>
                         {item.criadoEm ? formatarData(item.criadoEm) : `Aptidão ${item.scoreAptidao}/100`}
                       </Text>
+                      {item.notaPessoal ? (
+                        <Text style={styles.itemNota} numberOfLines={1}>
+                          📝 {item.notaPessoal}
+                        </Text>
+                      ) : null}
                     </View>
                   </View>
                   <View style={styles.itemDir}>
                     <AptidaoBadge classificacao={item.classificacaoAptidao} />
+                    <Pressable
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Editar nota de ${item.cultura.nome}`}
+                      onPress={() => abrirEdicao(item)}
+                    >
+                      <Ionicons name="pencil-outline" size={19} color={colors.primary} />
+                    </Pressable>
                     <Pressable
                       hitSlop={8}
                       accessibilityRole="button"
@@ -185,6 +232,70 @@ export default function HistoricoScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* Modal de edição de nota (Update) */}
+      <Modal
+        visible={editando !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditando(null)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalBackdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitulo}>Editar nota — {editando?.cultura.nome}</Text>
+
+            <Text style={styles.modalLabel}>Nota pessoal</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ex: Lembrar de irrigar às manhãs"
+              placeholderTextColor={colors.muted}
+              value={notaPessoal}
+              onChangeText={setNotaPessoal}
+              multiline
+              textAlignVertical="top"
+              accessibilityLabel="Nota pessoal"
+            />
+
+            <Text style={styles.modalLabel}>Detalhes (opcional)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ex: solo argiloso, sem irrigação"
+              placeholderTextColor={colors.muted}
+              value={detalhesEdicao}
+              onChangeText={setDetalhesEdicao}
+              multiline
+              textAlignVertical="top"
+              accessibilityLabel="Detalhes"
+            />
+
+            <Pressable
+              style={styles.modalSalvar}
+              onPress={salvarEdicao}
+              disabled={salvandoEdicao}
+              accessibilityRole="button"
+              accessibilityLabel="Salvar"
+            >
+              {salvandoEdicao ? (
+                <ActivityIndicator color={colors.onPrimary} />
+              ) : (
+                <Text style={styles.modalSalvarTexto}>Salvar</Text>
+              )}
+            </Pressable>
+            <Pressable
+              style={styles.modalCancelar}
+              onPress={() => setEditando(null)}
+              disabled={salvandoEdicao}
+              accessibilityRole="button"
+              accessibilityLabel="Cancelar"
+            >
+              <Text style={styles.modalCancelarTexto}>Cancelar</Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -236,7 +347,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     ...shadow.card,
   },
-  itemEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap },
+  itemEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap, flex: 1 },
+  itemTextos: { flex: 1 },
   avatar: {
     width: 44,
     height: 44,
@@ -248,7 +360,54 @@ const styles = StyleSheet.create({
   avatarEmoji: { fontSize: 22 },
   itemNome: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
   itemData: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, marginTop: 2 },
-  itemDir: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap },
+  itemNota: { fontFamily: fonts.regular, fontSize: 12, color: colors.primary, marginTop: 2 },
+  itemDir: { flexDirection: 'row', alignItems: 'center', gap: spacing.stack },
+
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.section,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: colors.surface,
+    borderRadius: radius.card,
+    padding: spacing.section,
+    gap: spacing.stack,
+    ...shadow.card,
+  },
+  modalTitulo: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: colors.primary,
+    marginBottom: spacing.xs,
+  },
+  modalLabel: { fontFamily: fonts.medium, fontSize: 13, color: colors.text, marginTop: spacing.xs },
+  modalInput: {
+    minHeight: 64,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.input,
+    padding: spacing.gap,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.text,
+  },
+  modalSalvar: {
+    height: 48,
+    backgroundColor: colors.primary,
+    borderRadius: radius.button,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.gap,
+  },
+  modalSalvarTexto: { fontFamily: fonts.bold, fontSize: 15, color: colors.onPrimary },
+  modalCancelar: { height: 44, alignItems: 'center', justifyContent: 'center' },
+  modalCancelarTexto: { fontFamily: fonts.bold, fontSize: 14, color: colors.muted },
 
   cardVazio: {
     marginTop: spacing.gap,
