@@ -3,7 +3,7 @@
  * Header verde com saudação/avatar e sino, card de clima (API real),
  * botão "Nova análise" e "Últimas consultas" (histórico local por IDs).
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
   Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import AptidaoBadge from '../../components/AptidaoBadge';
@@ -85,23 +85,26 @@ export default function HomeScreen() {
     };
   }, [location]);
 
-  // Últimas consultas (2 primeiras do histórico local).
-  useEffect(() => {
-    let ativo = true;
-    (async () => {
-      try {
-        const lista = await listarHistorico();
-        if (ativo) setConsultas(lista.slice(0, 2));
-      } catch (e) {
-        Alert.alert('Erro', handleApiError(e));
-      } finally {
-        if (ativo) setCarregando(false);
-      }
-    })();
-    return () => {
-      ativo = false;
-    };
-  }, []);
+  // Últimas consultas (2 primeiras do histórico local) — recarrega ao focar a aba.
+  useFocusEffect(
+    useCallback(() => {
+      let ativo = true;
+      setCarregando(true);
+      (async () => {
+        try {
+          const lista = await listarHistorico();
+          if (ativo) setConsultas(lista.slice(0, 2));
+        } catch (e) {
+          if (ativo) Alert.alert('Erro', handleApiError(e));
+        } finally {
+          if (ativo) setCarregando(false);
+        }
+      })();
+      return () => {
+        ativo = false;
+      };
+    }, []),
+  );
 
   const primeiroNome = user?.nome?.trim().split(/\s+/)[0] ?? 'Produtor';
 
