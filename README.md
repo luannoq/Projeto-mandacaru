@@ -45,7 +45,7 @@ infraestrutura), 13 (Ação contra a mudança do clima).
 
 ## 🎥 Vídeo de demonstração
 
-> **YouTube (não listado):** _[link a adicionar quando o vídeo for gravado]_
+> **YouTube:** https://youtu.be/A2B-tGzG72I
 
 ---
 
