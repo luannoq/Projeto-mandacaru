@@ -7,6 +7,7 @@
  * buscamos cada recomendação na API.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isAxiosError } from 'axios';
 
 import { buscarRecomendacao, removerRecomendacao } from './recomendacao';
 import type { RecomendacaoResponse } from '../types/api';
@@ -36,11 +37,36 @@ export async function salvarNoHistorico(recomendacaoId: number): Promise<void> {
   await gravarIds([recomendacaoId, ...semDuplicata]);
 }
 
-/** Lista as recomendações salvas, buscando cada uma na API (mais recente primeiro). */
+/**
+ * Lista as recomendações salvas, buscando cada uma na API (mais recente primeiro).
+ *
+ * Usa Promise.allSettled para tolerar IDs órfãos: itens que retornam 404 (não
+ * existem mais no banco — ex.: H2 resetado) são removidos do AsyncStorage
+ * silenciosamente; outros erros (ex.: rede) são ignorados sem remover o ID.
+ */
 export async function listarHistorico(): Promise<RecomendacaoResponse[]> {
   const ids = await lerIds();
   if (ids.length === 0) return [];
-  return Promise.all(ids.map((id) => buscarRecomendacao(id)));
+
+  const resultados = await Promise.allSettled(ids.map((id) => buscarRecomendacao(id)));
+
+  const itens: RecomendacaoResponse[] = [];
+  const idsOrfaos: number[] = [];
+
+  resultados.forEach((resultado, i) => {
+    if (resultado.status === 'fulfilled') {
+      itens.push(resultado.value);
+    } else if (isAxiosError(resultado.reason) && resultado.reason.response?.status === 404) {
+      idsOrfaos.push(ids[i]); // não existe mais no banco → remover
+    }
+    // Outros erros (rede, 5xx): mantém o ID e ignora silenciosamente.
+  });
+
+  if (idsOrfaos.length > 0) {
+    await gravarIds(ids.filter((id) => !idsOrfaos.includes(id)));
+  }
+
+  return itens;
 }
 
 /** Remove a recomendação na API e tira o ID do histórico local. */
