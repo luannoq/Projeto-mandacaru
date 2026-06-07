@@ -49,3 +49,8 @@ export async function removerDoHistorico(id: number): Promise<void> {
   const ids = await lerIds();
   await gravarIds(ids.filter((item) => item !== id));
 }
+
+/** Limpa todo o histórico local (apaga os IDs salvos no AsyncStorage). */
+export async function limparHistorico(): Promise<void> {
+  await AsyncStorage.removeItem(HISTORICO_IDS_KEY);
+}

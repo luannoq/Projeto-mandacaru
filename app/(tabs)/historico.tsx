@@ -19,7 +19,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import AptidaoBadge from '../../components/AptidaoBadge';
-import { listarHistorico, removerDoHistorico } from '../../services/historico';
+import { listarHistorico, removerDoHistorico, limparHistorico } from '../../services/historico';
 import { getEmojiForCultura } from '../../constants/culturas';
 import { handleApiError } from '../../utils/handleApiError';
 import type { RecomendacaoResponse } from '../../types/api';
@@ -71,6 +71,20 @@ export default function HistoricoScreen() {
     return itens.filter((i) => i.cultura.nome.toLowerCase().includes(termo));
   }, [busca, itens]);
 
+  function confirmarLimpeza() {
+    Alert.alert('Limpar histórico?', 'Esta ação não pode ser desfeita.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Limpar',
+        style: 'destructive',
+        onPress: async () => {
+          await limparHistorico();
+          setItens([]);
+        },
+      },
+    ]);
+  }
+
   function confirmarExclusao(item: RecomendacaoResponse) {
     Alert.alert('Remover do histórico', `Remover a recomendação de ${item.cultura.nome}?`, [
       { text: 'Cancelar', style: 'cancel' },
@@ -91,6 +105,14 @@ export default function HistoricoScreen() {
     <View style={styles.tela}>
       <View style={[styles.header, { paddingTop: insets.top + spacing.gap }]}>
         <Text style={styles.headerTitulo}>Histórico</Text>
+        <Pressable
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Limpar histórico"
+          onPress={confirmarLimpeza}
+        >
+          <Ionicons name="trash-outline" size={20} color={colors.onPrimary} />
+        </Pressable>
       </View>
 
       <ScrollView
@@ -173,6 +195,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.screen,
     paddingBottom: spacing.screen,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitulo: { fontFamily: fonts.bold, fontSize: 18, color: colors.onPrimary },
 
