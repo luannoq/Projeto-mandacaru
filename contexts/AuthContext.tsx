@@ -1,23 +1,29 @@
 /**
- * AuthContext — estado global de autenticação via Firebase Authentication.
+ * AuthContext — estado global de autenticação via JWT da API Java.
  *
- * Escuta onAuthStateChanged e expõe ações de login, cadastro e logout.
- * A proteção de rotas vive em app/_layout.tsx, que consome `user` e `loading`.
+ * Substitui o Firebase Authentication: login/cadastro chamam os endpoints
+ * /api/auth/login e /api/auth/register (services/auth.ts) e o JWT fica
+ * persistido no AsyncStorage. A proteção de rotas vive em app/_layout.tsx,
+ * que consome `user` e `loading`.
+ *
+ * O Firebase continua instalado no projeto, mas NÃO é mais usado para auth
+ * (será usado apenas para App Distribution).
  */
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  signOut as firebaseSignOut,
-  type User,
-} from 'firebase/auth';
-import { auth } from '../services/firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { login as loginApi, registrar as registrarApi } from '../services/auth';
+import { STORAGE_TOKEN_KEY, STORAGE_USER_KEY } from '../services/api';
+
+/** Usuário autenticado (derivado do AuthResponse + persistido no AsyncStorage). */
+export type AuthUser = {
+  email: string;
+  nome: string;
+};
 
 type AuthContextValue = {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   signIn: (email: string, senha: string) => Promise<void>;
   signUp: (nome: string, email: string, senha: string) => Promise<void>;
@@ -26,16 +32,35 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+/** Persiste token + usuário e atualiza o estado. */
+async function persistirSessao(token: string, usuario: AuthUser): Promise<void> {
+  await AsyncStorage.multiSet([
+    [STORAGE_TOKEN_KEY, token],
+    [STORAGE_USER_KEY, JSON.stringify(usuario)],
+  ]);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Inicialização: lê o token do AsyncStorage e considera autenticado sem revalidar.
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (usuario) => {
-      setUser(usuario);
-      setLoading(false);
-    });
-    return unsubscribe;
+    (async () => {
+      try {
+        const [token, usuarioRaw] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_TOKEN_KEY),
+          AsyncStorage.getItem(STORAGE_USER_KEY),
+        ]);
+        if (token && usuarioRaw) {
+          setUser(JSON.parse(usuarioRaw) as AuthUser);
+        }
+      } catch {
+        // Falha ao ler a sessão — começa deslogado.
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -43,18 +68,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       loading,
       async signIn(email, senha) {
-        await signInWithEmailAndPassword(auth, email.trim(), senha);
+        const resp = await loginApi(email.trim(), senha);
+        const usuario: AuthUser = { email: resp.email, nome: resp.email.split('@')[0] };
+        await persistirSessao(resp.token, usuario);
+        setUser(usuario);
       },
       async signUp(nome, email, senha) {
-        const cred = await createUserWithEmailAndPassword(auth, email.trim(), senha);
-        if (nome.trim()) {
-          await updateProfile(cred.user, { displayName: nome.trim() });
-          setUser({ ...cred.user });
-        }
+        const resp = await registrarApi(nome.trim(), email.trim(), senha);
+        const usuario: AuthUser = {
+          email: resp.email,
+          nome: nome.trim() || resp.email.split('@')[0],
+        };
+        await persistirSessao(resp.token, usuario);
+        setUser(usuario);
       },
       async signOut() {
-        // Logout limpa completamente a sessão (Firebase + persistência AsyncStorage).
-        await firebaseSignOut(auth);
+        await AsyncStorage.multiRemove([STORAGE_TOKEN_KEY, STORAGE_USER_KEY]);
+        setUser(null);
       },
     }),
     [user, loading],
