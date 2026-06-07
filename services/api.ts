@@ -57,7 +57,8 @@ export const apiCatalogo = configurarInterceptors(
 export const apiRecomendacao = configurarInterceptors(
   axios.create({
     baseURL: recomendacaoURL,
-    timeout: 15000,
+    // 60s: este serviço chama o Gemini, que pode demorar mais que os 15s padrão.
+    timeout: 60000,
     headers: { 'Content-Type': 'application/json' },
   }),
 );

@@ -16,7 +16,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,6 +25,12 @@ import { mensagemInicial, enviarMensagem } from '../services/iakaru';
 import { MensagemChat } from '../services/mocks';
 import { handleApiError } from '../utils/handleApiError';
 import { colors, spacing, radius, fonts, shadow } from '../constants/theme';
+
+/** Mensagem do chat, com flag de erro para estilizar a bolha. */
+type Mensagem = MensagemChat & { erro?: boolean };
+
+/** Tempo máximo de espera local pela resposta do assistente. */
+const TIMEOUT_IAKARU_MS = 65000;
 
 /** Avatar circular do IAkaru (folha em fundo verde claro). */
 function AvatarIAkaru({ size = 32 }: { size?: number }) {
@@ -73,7 +78,7 @@ export default function IAkaruScreen() {
   const culturaNomeRaw = Array.isArray(params.culturaNome) ? params.culturaNome[0] : params.culturaNome;
   const culturaNome = culturaNomeRaw ? decodeURIComponent(culturaNomeRaw) : undefined;
 
-  const [mensagens, setMensagens] = useState<MensagemChat[]>([]);
+  const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [texto, setTexto] = useState('');
   const [digitando, setDigitando] = useState(false);
 
@@ -110,10 +115,23 @@ export default function IAkaruScreen() {
 
     try {
       const contexto = culturaNome ? `Agricultor consultando sobre ${culturaNome}` : undefined;
-      const resposta = await enviarMensagem(pergunta, contexto);
+      // Timeout local de segurança: se a API não responder, não fica carregando para sempre.
+      const resposta = await Promise.race([
+        enviarMensagem(pergunta, contexto),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout-local')), TIMEOUT_IAKARU_MS),
+        ),
+      ]);
       setMensagens((prev) => [...prev, { id: proximoId(), autor: 'iakaru', texto: resposta }]);
     } catch (e) {
-      Alert.alert('Erro', handleApiError(e));
+      const mensagemErro =
+        e instanceof Error && e.message === 'timeout-local'
+          ? 'O assistente está demorando para responder. Tente novamente em instantes.'
+          : handleApiError(e);
+      setMensagens((prev) => [
+        ...prev,
+        { id: proximoId(), autor: 'iakaru', texto: mensagemErro, erro: true },
+      ]);
     } finally {
       setDigitando(false);
     }
@@ -152,8 +170,8 @@ export default function IAkaruScreen() {
             ) : (
               <View key={m.id} style={styles.linhaIA}>
                 <AvatarIAkaru />
-                <View style={[styles.bolha, styles.bolhaIA]}>
-                  <Text style={styles.textoIA}>{m.texto}</Text>
+                <View style={[styles.bolha, styles.bolhaIA, m.erro && styles.bolhaErro]}>
+                  <Text style={[styles.textoIA, m.erro && styles.textoErro]}>{m.texto}</Text>
                 </View>
               </View>
             ),
@@ -225,6 +243,8 @@ const styles = StyleSheet.create({
   },
   textoUsuario: { fontFamily: fonts.regular, fontSize: 15, color: colors.onPrimary, lineHeight: 21 },
   textoIA: { fontFamily: fonts.regular, fontSize: 15, color: colors.text, lineHeight: 21 },
+  bolhaErro: { backgroundColor: colors.errorBg, borderColor: colors.errorText },
+  textoErro: { color: colors.errorText },
 
   bolhaDigitando: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 14 },
   ponto: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.muted },

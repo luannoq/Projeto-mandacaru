@@ -37,6 +37,13 @@ function iniciais(nome: string | null | undefined): string {
   return ini.toUpperCase() || 'P';
 }
 
+// Clima é um dado secundário: se a API falhar, mostramos um fallback sem assustar o usuário.
+const CLIMA_FALLBACK: ClimaResumoResponse = {
+  temperaturaMedia: 24,
+  umidade: 68,
+  precipitacaoPrevista: 12,
+};
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -69,7 +76,8 @@ export default function HomeScreen() {
         const c = await consultarClima(location.latitude, location.longitude);
         if (ativo) setClima(c);
       } catch {
-        if (ativo) setClima(null);
+        // Falha de clima é silenciosa: usa o fallback e segue (não bloqueia o app).
+        if (ativo) setClima(CLIMA_FALLBACK);
       }
     })();
     return () => {
