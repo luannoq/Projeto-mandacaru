@@ -26,7 +26,6 @@ import { useLocation } from '../../hooks/useLocation';
 import { consultarClima } from '../../services/clima';
 import { listarHistorico } from '../../services/historico';
 import { getEmojiForCultura } from '../../constants/culturas';
-import { handleApiError } from '../../utils/handleApiError';
 import type { ClimaResumoResponse, RecomendacaoResponse } from '../../types/api';
 import { colors, spacing, radius, fonts, shadow } from '../../constants/theme';
 
@@ -46,6 +45,7 @@ export default function HomeScreen() {
   const [clima, setClima] = useState<ClimaResumoResponse | null>(null);
   const [climaIndisponivel, setClimaIndisponivel] = useState(false);
   const [consultas, setConsultas] = useState<RecomendacaoResponse[]>([]);
+  const [consultasErro, setConsultasErro] = useState(false);
   const [carregando, setCarregando] = useState(true);
 
   // Localização ao abrir a Home.
@@ -93,9 +93,14 @@ export default function HomeScreen() {
       (async () => {
         try {
           const lista = await listarHistorico();
-          if (ativo) setConsultas(lista.slice(0, 2));
-        } catch (e) {
-          if (ativo) Alert.alert('Erro', handleApiError(e));
+          if (ativo) {
+            setConsultas(lista.slice(0, 2));
+            setConsultasErro(false);
+          }
+        } catch {
+          // Últimas consultas são dado secundário: falha não dispara Alert,
+          // apenas um estado visual discreto na seção.
+          if (ativo) setConsultasErro(true);
         } finally {
           if (ativo) setCarregando(false);
         }
@@ -213,6 +218,8 @@ export default function HomeScreen() {
 
           {carregando ? (
             <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.gap }} />
+          ) : consultasErro ? (
+            <Text style={styles.vazio}>Não foi possível carregar as últimas consultas.</Text>
           ) : consultas.length === 0 ? (
             <Text style={styles.vazio}>Nenhuma consulta ainda.</Text>
           ) : (
