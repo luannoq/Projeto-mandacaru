@@ -2,52 +2,9 @@
  * Tipos e dados estáticos de UI do Akaru.
  *
  * Os dados de domínio (culturas, clima, recomendações, histórico, chat) vêm da
- * API real (ver services/*). Aqui ficam apenas metadados do app e a saudação
- * inicial do IAkaru — conteúdo de UI, não dado de domínio.
+ * API real (ver services/* e types/api.ts). Aqui ficam apenas metadados do app
+ * e a saudação inicial do IAkaru — conteúdo de UI, não dado de domínio.
  */
-
-import { StatusRecomendacao } from '../constants/theme';
-
-export type Cultura = {
-  id: string;
-  nome: string;
-  emoji: string;
-};
-
-export type Clima = {
-  cidade: string;
-  uf: string;
-  condicao: string;
-  temperatura: number;
-  umidade: number;
-  chuvaMm: number;
-};
-
-export type DetalheRecomendacao = {
-  tipo: 'epoca' | 'espacamento' | 'irrigacao' | 'alerta';
-  titulo: string;
-  descricao: string;
-};
-
-export type Recomendacao = {
-  culturaId: string;
-  nome: string;
-  emoji: string;
-  cidade: string;
-  uf: string;
-  status: StatusRecomendacao;
-  resumoStatus: string;
-  detalhes: DetalheRecomendacao[];
-};
-
-export type ItemHistorico = {
-  id: string;
-  culturaId: string;
-  emoji: string;
-  nome: string;
-  data: string;
-  status: StatusRecomendacao;
-};
 
 export type MensagemChat = {
   id: string;
