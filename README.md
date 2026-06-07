@@ -95,10 +95,7 @@ limpa a sessão e volta para o login.
 | [`historico.ts`](services/historico.ts)       | sem endpoint — guarda IDs no AsyncStorage (`akaru_historico_ids`) e busca cada um |
 
 **Erros:** [`utils/handleApiError.ts`](utils/handleApiError.ts) traduz os erros do Axios
-(400/401/403/404/503/rede) em mensagens amigáveis exibidas com `Alert.alert`.
-
-> A flag `EXPO_PUBLIC_USE_MOCKS` está prevista para alternar entre API real e mocks locais
-> (`services/mocks.ts`) em desenvolvimento offline.
+(400/401/403/404/409/503/rede) em mensagens amigáveis exibidas com `Alert.alert`.
 
 ---
 
@@ -124,13 +121,10 @@ Componentes reutilizáveis seguem o design system:
 ## 🤖 IAkaru — assistente de IA generativa
 
 O **IAkaru** ([`app/iakaru.tsx`](app/iakaru.tsx)) é um chat conversacional que responde
-dúvidas do produtor sobre plantio, clima e manejo. Na arquitetura final ele consome um
-endpoint de **IA Generativa (Google Gemini)** servido pelo backend (Java Spring AI / .NET),
-combinando o contexto climático de satélite com a pergunta do usuário.
-
-> **Estado atual:** as respostas estão mockadas em
-> [`services/iakaru.ts`](services/iakaru.ts) (marcadas com `// TODO: integrar com API real`)
-> enquanto o endpoint do Gemini é finalizado.
+dúvidas do produtor sobre plantio, clima e manejo. As **respostas são reais**, geradas por
+**IA Generativa (Google Gemini)** via API Java — [`services/iakaru.ts`](services/iakaru.ts)
+chama `POST /api/iakaru/chat` enviando a pergunta e o contexto da cultura. As respostas em
+Markdown são renderizadas na tela ([`constants/markdown.ts`](constants/markdown.ts)).
 
 ---
 
