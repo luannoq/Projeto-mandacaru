@@ -13,6 +13,7 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  AppState,
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,6 +21,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import Button from '../../components/Button';
+import LocationPermissionModal from '../../components/LocationPermissionModal';
 import { useLocation } from '../../hooks/useLocation';
 import { listarCulturas } from '../../services/culturas';
 import { getEmojiForCultura } from '../../constants/culturas';
@@ -34,13 +36,15 @@ export default function AnaliseScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { location, requestLocation } = useLocation();
+  const { location, permissionDenied, requestLocation } = useLocation();
 
   const [culturas, setCulturas] = useState<CulturaResponse[]>([]);
   const [busca, setBusca] = useState('');
   const [selecionada, setSelecionada] = useState<number | null>(null);
   const [detalhes, setDetalhes] = useState('');
   const [carregando, setCarregando] = useState(true);
+  // Usuário optou por seguir com a localização padrão (São Paulo).
+  const [usouFallback, setUsouFallback] = useState(false);
 
   useEffect(() => {
     let ativo = true;
@@ -64,6 +68,17 @@ export default function AnaliseScreen() {
     requestLocation();
   }, [requestLocation]);
 
+  // Ao voltar das Configurações (app ativo), re-checa a permissão.
+  // Se o usuário tiver concedido, a localização chega e o modal some sozinho.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (estado) => {
+      if (estado === 'active') requestLocation();
+    });
+    return () => sub.remove();
+  }, [requestLocation]);
+
+  const semLocalizacaoConfirmada = !location && !usouFallback;
+
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     if (!termo) return culturas;
@@ -76,6 +91,16 @@ export default function AnaliseScreen() {
   function analisar() {
     if (selecionada == null) {
       Alert.alert('Selecione uma cultura', 'Escolha uma cultura para gerar a recomendação.');
+      return;
+    }
+    // Só prossegue com localização real ou fallback confirmado pelo usuário.
+    if (semLocalizacaoConfirmada) {
+      Alert.alert(
+        'Localização necessária',
+        permissionDenied
+          ? 'Ative a localização nas Configurações ou escolha usar São Paulo como padrão.'
+          : 'Aguarde enquanto obtemos sua localização...',
+      );
       return;
     }
     const local = location ?? FALLBACK_LOCAL;
@@ -168,8 +193,14 @@ export default function AnaliseScreen() {
 
       {/* Rodapé fixo */}
       <View style={[styles.footer, { paddingBottom: spacing.gap }]}>
-        <Button titulo="Analisar" onPress={analisar} />
+        <Button titulo="Analisar" onPress={analisar} disabled={semLocalizacaoConfirmada} />
       </View>
+
+      {/* Permissão de GPS negada */}
+      <LocationPermissionModal
+        visible={permissionDenied && !usouFallback}
+        onUsarPadrao={() => setUsouFallback(true)}
+      />
     </View>
   );
 }

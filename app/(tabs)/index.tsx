@@ -4,7 +4,17 @@
  * botão "Nova análise" e "Últimas consultas" (histórico local por IDs).
  */
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+  AppState,
+  Linking,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,7 +41,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { location, loading: localizando, requestLocation } = useLocation();
+  const { location, loading: localizando, permissionDenied, requestLocation } = useLocation();
 
   const [clima, setClima] = useState<ClimaResumoResponse | null>(null);
   const [consultas, setConsultas] = useState<RecomendacaoResponse[]>([]);
@@ -40,6 +50,14 @@ export default function HomeScreen() {
   // Localização ao abrir a Home.
   useEffect(() => {
     requestLocation();
+  }, [requestLocation]);
+
+  // Re-checa a permissão ao voltar das Configurações (some o banner se concedida).
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (estado) => {
+      if (estado === 'active') requestLocation();
+    });
+    return () => sub.remove();
   }, [requestLocation]);
 
   // Clima real assim que houver localização (falha de clima não bloqueia a tela).
@@ -98,6 +116,18 @@ export default function HomeScreen() {
           <Ionicons name="notifications-outline" size={24} color={colors.onPrimary} />
         </Pressable>
       </View>
+
+      {/* Banner de localização desativada */}
+      {permissionDenied && (
+        <Pressable
+          style={styles.banner}
+          onPress={() => Linking.openSettings()}
+          accessibilityRole="button"
+          accessibilityLabel="Localização desativada, toque para ativar nas configurações"
+        >
+          <Text style={styles.bannerTexto}>📍 Localização desativada — toque para ativar</Text>
+        </Pressable>
+      )}
 
       <ScrollView contentContainerStyle={styles.conteudo} showsVerticalScrollIndicator={false}>
         {/* Card de clima */}
@@ -227,6 +257,14 @@ const styles = StyleSheet.create({
   },
   avatarTexto: { fontFamily: fonts.bold, color: colors.primary, fontSize: 15 },
   saudacao: { fontFamily: fonts.bold, fontSize: 18, color: colors.onPrimary },
+
+  banner: {
+    backgroundColor: colors.warningBg,
+    paddingHorizontal: spacing.screen,
+    paddingVertical: spacing.stack,
+    alignItems: 'center',
+  },
+  bannerTexto: { fontFamily: fonts.medium, fontSize: 13, color: colors.warningText },
 
   conteudo: { padding: spacing.screen, gap: spacing.section, paddingBottom: spacing.xl },
 
