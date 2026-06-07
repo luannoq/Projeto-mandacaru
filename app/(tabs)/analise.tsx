@@ -1,7 +1,7 @@
 /**
  * Nova Análise — conversão fiel do design do Akaru.
  * Busca de cultura, grid 3 colunas com seleção destacada, detalhes opcionais
- * e botão "Analisar" fixo no rodapé. Culturas vêm de listarCulturas().
+ * e botão "Analisar" fixo no rodapé. Culturas vêm da API (apiCatalogo).
  */
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -22,8 +22,13 @@ import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/Button';
 import { useLocation } from '../../hooks/useLocation';
 import { listarCulturas } from '../../services/culturas';
-import { Cultura } from '../../services/mocks';
+import { getEmojiForCultura } from '../../constants/culturas';
+import { handleApiError } from '../../utils/handleApiError';
+import type { CulturaResponse } from '../../types/api';
 import { colors, spacing, radius, fonts, shadow } from '../../constants/theme';
+
+// Fallback de localização quando o GPS não está disponível (permissão negada).
+const FALLBACK_LOCAL = { latitude: -23.5505, longitude: -46.6333, cidade: 'São Paulo', estado: 'SP' };
 
 export default function AnaliseScreen() {
   const router = useRouter();
@@ -31,9 +36,9 @@ export default function AnaliseScreen() {
   const { width } = useWindowDimensions();
   const { location, requestLocation } = useLocation();
 
-  const [culturas, setCulturas] = useState<Cultura[]>([]);
+  const [culturas, setCulturas] = useState<CulturaResponse[]>([]);
   const [busca, setBusca] = useState('');
-  const [selecionada, setSelecionada] = useState<string | null>(null);
+  const [selecionada, setSelecionada] = useState<number | null>(null);
   const [detalhes, setDetalhes] = useState('');
   const [carregando, setCarregando] = useState(true);
 
@@ -43,8 +48,8 @@ export default function AnaliseScreen() {
       try {
         const lista = await listarCulturas();
         if (ativo) setCulturas(lista);
-      } catch (e: any) {
-        Alert.alert('Erro', e?.message ?? 'Não foi possível carregar as culturas.');
+      } catch (e) {
+        Alert.alert('Erro', handleApiError(e));
       } finally {
         if (ativo) setCarregando(false);
       }
@@ -54,7 +59,7 @@ export default function AnaliseScreen() {
     };
   }, []);
 
-  // Captura a localização em segundo plano para enviar lat/lon na análise.
+  // Captura a localização em segundo plano para enviar na análise.
   useEffect(() => {
     requestLocation();
   }, [requestLocation]);
@@ -69,19 +74,22 @@ export default function AnaliseScreen() {
   const itemSize = (width - spacing.screen * 2 - spacing.gap * 2) / 3;
 
   function analisar() {
-    if (!selecionada) {
+    if (selecionada == null) {
       Alert.alert('Selecione uma cultura', 'Escolha uma cultura para gerar a recomendação.');
       return;
     }
-    // Monta o payload da navegação; lat/lon vão junto quando houver localização.
-    // TODO: a API Java receberá lat/lon para gerar a recomendação por região.
-    const params: Record<string, string> = { culturaId: selecionada };
-    if (detalhes.trim()) params.detalhes = detalhes.trim();
-    if (location) {
-      params.lat = String(location.latitude);
-      params.lon = String(location.longitude);
-    }
-    router.push({ pathname: '/resultado', params });
+    const local = location ?? FALLBACK_LOCAL;
+    router.push({
+      pathname: '/resultado',
+      params: {
+        culturaId: String(selecionada),
+        latitude: String(local.latitude),
+        longitude: String(local.longitude),
+        cidade: local.cidade ?? FALLBACK_LOCAL.cidade,
+        estado: local.estado ?? FALLBACK_LOCAL.estado,
+        ...(detalhes.trim() ? { detalhes: detalhes.trim() } : {}),
+      },
+    });
   }
 
   return (
@@ -133,7 +141,7 @@ export default function AnaliseScreen() {
                     ativa ? styles.celulaAtiva : styles.celulaInativa,
                   ]}
                 >
-                  <Text style={styles.celulaEmoji}>{cultura.emoji}</Text>
+                  <Text style={styles.celulaEmoji}>{getEmojiForCultura(cultura.nome)}</Text>
                   <Text style={styles.celulaNome}>{cultura.nome}</Text>
                 </Pressable>
               );

@@ -22,7 +22,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { mensagemInicial, enviarPergunta } from '../services/iakaru';
-import { mockCulturas, MensagemChat } from '../services/mocks';
+import { MensagemChat } from '../services/mocks';
 import { colors, spacing, radius, fonts, shadow } from '../constants/theme';
 
 /** Avatar circular do IAkaru (folha em fundo verde claro). */
@@ -67,8 +67,9 @@ function TypingDots() {
 export default function IAkaruScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ culturaId?: string }>();
-  const culturaId = Array.isArray(params.culturaId) ? params.culturaId[0] : params.culturaId;
+  const params = useLocalSearchParams<{ culturaId?: string; culturaNome?: string }>();
+  const culturaNomeRaw = Array.isArray(params.culturaNome) ? params.culturaNome[0] : params.culturaNome;
+  const culturaNome = culturaNomeRaw ? decodeURIComponent(culturaNomeRaw) : undefined;
 
   const [mensagens, setMensagens] = useState<MensagemChat[]>([]);
   const [texto, setTexto] = useState('');
@@ -81,18 +82,15 @@ export default function IAkaruScreen() {
   // Mensagens iniciais (saudação + contexto da cultura, se houver)
   useEffect(() => {
     const iniciais: MensagemChat[] = [mensagemInicial()];
-    if (culturaId) {
-      const cultura = mockCulturas.find((c) => c.id === culturaId);
-      if (cultura) {
-        iniciais.push({
-          id: proximoId(),
-          autor: 'iakaru',
-          texto: `Vi que você está consultando sobre ${cultura.nome}. Posso te ajudar com mais detalhes sobre essa cultura, é só perguntar!`,
-        });
-      }
+    if (culturaNome) {
+      iniciais.push({
+        id: proximoId(),
+        autor: 'iakaru',
+        texto: `Vi que você consultou sobre ${culturaNome}. Como posso te ajudar?`,
+      });
     }
     setMensagens(iniciais);
-  }, [culturaId]);
+  }, [culturaNome]);
 
   // Auto-scroll ao final quando chega mensagem nova ou aparece "digitando"
   useEffect(() => {

@@ -1,7 +1,7 @@
 /**
  * Home — conversão fiel do design do Akaru.
- * Header verde com saudação/avatar e sino, card de clima, botão "Nova análise"
- * e lista "Últimas consultas". Dados vêm dos services (mocks por enquanto).
+ * Header verde com saudação/avatar e sino, card de clima (API real),
+ * botão "Nova análise" e "Últimas consultas" (histórico local por IDs).
  */
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
@@ -9,13 +9,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import StatusChip from '../../components/StatusChip';
+import AptidaoBadge from '../../components/AptidaoBadge';
 import LocationBadge from '../../components/LocationBadge';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocation } from '../../hooks/useLocation';
-import { obterClimaAtual } from '../../services/culturas';
+import { consultarClima } from '../../services/clima';
 import { listarHistorico } from '../../services/historico';
-import { Clima, ItemHistorico } from '../../services/mocks';
+import { getEmojiForCultura } from '../../constants/culturas';
+import { handleApiError } from '../../utils/handleApiError';
+import type { ClimaResumoResponse, RecomendacaoResponse } from '../../types/api';
 import { colors, spacing, radius, fonts, shadow } from '../../constants/theme';
 
 function iniciais(nome: string | null | undefined): string {
@@ -29,24 +31,43 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-
   const { location, loading: localizando, requestLocation } = useLocation();
 
-  const [clima, setClima] = useState<Clima | null>(null);
-  const [consultas, setConsultas] = useState<ItemHistorico[]>([]);
+  const [clima, setClima] = useState<ClimaResumoResponse | null>(null);
+  const [consultas, setConsultas] = useState<RecomendacaoResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
 
+  // Localização ao abrir a Home.
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
+
+  // Clima real assim que houver localização (falha de clima não bloqueia a tela).
+  useEffect(() => {
+    if (!location) return;
+    let ativo = true;
+    (async () => {
+      try {
+        const c = await consultarClima(location.latitude, location.longitude);
+        if (ativo) setClima(c);
+      } catch {
+        if (ativo) setClima(null);
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, [location]);
+
+  // Últimas consultas (2 primeiras do histórico local).
   useEffect(() => {
     let ativo = true;
     (async () => {
       try {
-        const [c, h] = await Promise.all([obterClimaAtual(), listarHistorico()]);
-        if (ativo) {
-          setClima(c);
-          setConsultas(h.slice(0, 2));
-        }
-      } catch (e: any) {
-        Alert.alert('Erro', e?.message ?? 'Não foi possível carregar os dados.');
+        const lista = await listarHistorico();
+        if (ativo) setConsultas(lista.slice(0, 2));
+      } catch (e) {
+        Alert.alert('Erro', handleApiError(e));
       } finally {
         if (ativo) setCarregando(false);
       }
@@ -56,12 +77,7 @@ export default function HomeScreen() {
     };
   }, []);
 
-  // Captura a localização do usuário ao abrir a Home (fallback para o mock se negada).
-  useEffect(() => {
-    requestLocation();
-  }, [requestLocation]);
-
-  const primeiroNome = user?.displayName?.trim().split(/\s+/)[0] ?? 'Produtor';
+  const primeiroNome = user?.nome?.trim().split(/\s+/)[0] ?? 'Produtor';
 
   return (
     <View style={styles.tela}>
@@ -69,7 +85,7 @@ export default function HomeScreen() {
       <View style={[styles.header, { paddingTop: insets.top + spacing.gap }]}>
         <View style={styles.headerEsq}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarTexto}>{iniciais(user?.displayName)}</Text>
+            <Text style={styles.avatarTexto}>{iniciais(user?.nome)}</Text>
           </View>
           <Text style={styles.saudacao}>Olá, {primeiroNome}</Text>
         </View>
@@ -84,102 +100,97 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.conteudo} showsVerticalScrollIndicator={false}>
-        {carregando ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
-        ) : (
-          <>
-            {/* Card de clima */}
-            {clima && (
-              <View style={[styles.card, styles.cardClima]}>
-                <View style={styles.climaTopo}>
-                  <View style={styles.climaEsq}>
-                    <LocationBadge
-                      cidade={location?.cidade}
-                      estado={location?.estado}
-                      loading={localizando}
-                      fallback={`${clima.cidade}, ${clima.uf}`}
-                      color={colors.primary}
-                      iconSize={18}
-                      textStyle={styles.climaCidade}
-                    />
-                    <Text style={styles.climaCondicao}>{clima.condicao}</Text>
-                  </View>
-                  <Text style={styles.climaTemp}>{clima.temperatura}°C</Text>
-                </View>
-                <View style={styles.climaInfos}>
-                  <View style={styles.climaInfo}>
-                    <Ionicons name="cloud-outline" size={20} color={colors.muted} />
-                    <View>
-                      <Text style={styles.climaLabel}>UMIDADE</Text>
-                      <Text style={styles.climaValor}>{clima.umidade}%</Text>
-                    </View>
-                  </View>
-                  <View style={styles.climaInfo}>
-                    <Ionicons name="water-outline" size={20} color={colors.muted} />
-                    <View>
-                      <Text style={styles.climaLabel}>CHUVA</Text>
-                      <Text style={styles.climaValor}>{clima.chuvaMm}mm</Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* Nova análise */}
-            <View style={styles.secao}>
-              <Text style={styles.secaoTitulo}>O que plantar hoje?</Text>
-              <Pressable
-                style={styles.botaoAnalise}
-                onPress={() => router.push('/analise')}
-                accessibilityRole="button"
-                accessibilityLabel="Nova análise"
-              >
-                <Ionicons name="leaf-outline" size={20} color={colors.onPrimary} />
-                <Text style={styles.botaoAnaliseTexto}>Nova análise</Text>
-              </Pressable>
+        {/* Card de clima */}
+        <View style={[styles.card, styles.cardClima]}>
+          <View style={styles.climaTopo}>
+            <View style={styles.climaEsq}>
+              <LocationBadge
+                cidade={location?.cidade}
+                estado={location?.estado}
+                loading={localizando}
+                color={colors.primary}
+                iconSize={18}
+                textStyle={styles.climaCidade}
+              />
+              <Text style={styles.climaCondicao}>Clima atual da sua região</Text>
             </View>
+            {clima && <Text style={styles.climaTemp}>{Math.round(clima.temperaturaMedia)}°C</Text>}
+          </View>
+          <View style={styles.climaInfos}>
+            <View style={styles.climaInfo}>
+              <Ionicons name="cloud-outline" size={20} color={colors.muted} />
+              <View>
+                <Text style={styles.climaLabel}>UMIDADE</Text>
+                <Text style={styles.climaValor}>{clima ? `${Math.round(clima.umidade)}%` : '—'}</Text>
+              </View>
+            </View>
+            <View style={styles.climaInfo}>
+              <Ionicons name="water-outline" size={20} color={colors.muted} />
+              <View>
+                <Text style={styles.climaLabel}>CHUVA</Text>
+                <Text style={styles.climaValor}>
+                  {clima ? `${Math.round(clima.precipitacaoPrevista)}mm` : '—'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
 
-            {/* Últimas consultas */}
-            <View style={styles.secao}>
-              <View style={styles.secaoHeader}>
-                <Text style={styles.secaoTitulo}>Últimas consultas</Text>
+        {/* Nova análise */}
+        <View style={styles.secao}>
+          <Text style={styles.secaoTitulo}>O que plantar hoje?</Text>
+          <Pressable
+            style={styles.botaoAnalise}
+            onPress={() => router.push('/analise')}
+            accessibilityRole="button"
+            accessibilityLabel="Nova análise"
+          >
+            <Ionicons name="leaf-outline" size={20} color={colors.onPrimary} />
+            <Text style={styles.botaoAnaliseTexto}>Nova análise</Text>
+          </Pressable>
+        </View>
+
+        {/* Últimas consultas */}
+        <View style={styles.secao}>
+          <View style={styles.secaoHeader}>
+            <Text style={styles.secaoTitulo}>Últimas consultas</Text>
+            <Pressable
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Ver todas as consultas"
+              onPress={() => router.push('/historico')}
+            >
+              <Text style={styles.verTudo}>Ver tudo</Text>
+            </Pressable>
+          </View>
+
+          {carregando ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.gap }} />
+          ) : consultas.length === 0 ? (
+            <Text style={styles.vazio}>Nenhuma consulta ainda.</Text>
+          ) : (
+            <View style={{ gap: spacing.stack }}>
+              {consultas.map((item) => (
                 <Pressable
-                  hitSlop={8}
+                  key={item.recomendacaoId}
+                  style={styles.consulta}
                   accessibilityRole="button"
-                  accessibilityLabel="Ver todas as consultas"
-                  onPress={() => router.push('/historico')}
+                  accessibilityLabel={`Consulta de ${item.cultura.nome}, aptidão ${item.classificacaoAptidao}`}
+                  onPress={() => router.push(`/resultado?id=${item.recomendacaoId}`)}
                 >
-                  <Text style={styles.verTudo}>Ver tudo</Text>
+                  <View style={styles.consultaEsq}>
+                    <Text style={styles.consultaEmoji}>{getEmojiForCultura(item.cultura.nome)}</Text>
+                    <View>
+                      <Text style={styles.consultaNome}>{item.cultura.nome}</Text>
+                      <Text style={styles.consultaData}>Aptidão {item.scoreAptidao}/100</Text>
+                    </View>
+                  </View>
+                  <AptidaoBadge classificacao={item.classificacaoAptidao} />
                 </Pressable>
-              </View>
-
-              {consultas.length === 0 ? (
-                <Text style={styles.vazio}>Nenhuma consulta ainda.</Text>
-              ) : (
-                <View style={{ gap: spacing.stack }}>
-                  {consultas.map((item) => (
-                    <Pressable
-                      key={item.id}
-                      style={styles.consulta}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Consulta de ${item.nome}, ${item.data}, status ${item.status}`}
-                      onPress={() => router.push(`/resultado?culturaId=${item.culturaId}`)}
-                    >
-                      <View style={styles.consultaEsq}>
-                        <Text style={styles.consultaEmoji}>{item.emoji}</Text>
-                        <View>
-                          <Text style={styles.consultaNome}>{item.nome}</Text>
-                          <Text style={styles.consultaData}>{item.data}</Text>
-                        </View>
-                      </View>
-                      <StatusChip status={item.status} />
-                    </Pressable>
-                  ))}
-                </View>
-              )}
+              ))}
             </View>
-          </>
-        )}
+          )}
+        </View>
       </ScrollView>
 
       {/* FAB do IAkaru */}
@@ -273,13 +284,7 @@ const styles = StyleSheet.create({
   consultaEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap },
   consultaEmoji: { fontSize: 24 },
   consultaNome: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  consultaData: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: colors.muted,
-    textTransform: 'uppercase',
-    marginTop: 2,
-  },
+  consultaData: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted, marginTop: 2 },
   vazio: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted },
 
   fab: {

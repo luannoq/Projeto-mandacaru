@@ -93,6 +93,16 @@ export const statusStyles = {
 
 export type StatusRecomendacao = keyof typeof statusStyles;
 
+/**
+ * Mapa de classificação de aptidão (API Java) → cores do badge.
+ * Usado em Resultado, Histórico e Home.
+ */
+export const aptidaoStyles = {
+  ALTA: { bg: colors.accent, text: colors.primary },
+  MÉDIA: { bg: colors.warningBg, text: colors.warningText },
+  BAIXA: { bg: colors.errorBg, text: colors.errorText },
+} as const;
+
 export const theme = {
   colors,
   spacing,

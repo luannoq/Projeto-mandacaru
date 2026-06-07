@@ -1,8 +1,12 @@
 /**
  * Resultado da Recomendação — conversão fiel do design do Akaru.
- * Card de cabeçalho (emoji, nome, localização, badge de status), cards de
- * detalhes (época, espaçamento, irrigação, alertas) e ações.
- * Lê o culturaId da rota e busca via obterRecomendacao().
+ *
+ * Dois caminhos:
+ *  - vindo da Nova Análise → gerarRecomendacao(request) com culturaId + GPS
+ *  - vindo da Home/Histórico → buscarRecomendacao(id) por recomendacaoId
+ *
+ * Exibe hero (emoji, nome, localização, badge de aptidão), os 4 cards do
+ * plano de plantio (Gemini) e ações.
  */
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert, Share } from 'react-native';
@@ -12,29 +16,42 @@ import { Ionicons } from '@expo/vector-icons';
 
 import Button from '../components/Button';
 import LocationBadge from '../components/LocationBadge';
-import { obterRecomendacao } from '../services/recomendacao';
+import AptidaoBadge from '../components/AptidaoBadge';
+import { gerarRecomendacao, buscarRecomendacao } from '../services/recomendacao';
 import { salvarNoHistorico } from '../services/historico';
-import { Recomendacao, DetalheRecomendacao } from '../services/mocks';
-import { colors, spacing, radius, fonts, shadow, statusStyles } from '../constants/theme';
+import { getEmojiForCultura } from '../constants/culturas';
+import { handleApiError } from '../utils/handleApiError';
+import type { RecomendacaoResponse } from '../types/api';
+import { colors, spacing, radius, fonts, shadow } from '../constants/theme';
 
-type EstiloDetalhe = {
-  icone: keyof typeof Ionicons.glyphMap;
-  bg: string;
-  cor: string;
-  textoCor: string;
-};
+type TipoDetalhe = 'epoca' | 'espacamento' | 'irrigacao' | 'alerta';
 
-function estiloDetalhe(tipo: DetalheRecomendacao['tipo']): EstiloDetalhe {
+function estiloDetalhe(tipo: TipoDetalhe) {
   switch (tipo) {
     case 'epoca':
-      return { icone: 'calendar-outline', bg: colors.accent, cor: colors.primary, textoCor: colors.muted };
+      return {
+        icone: 'calendar-outline' as const,
+        bg: colors.accent,
+        cor: colors.primary,
+        textoCor: colors.muted,
+      };
     case 'espacamento':
-      return { icone: 'resize-outline', bg: colors.accent, cor: colors.primary, textoCor: colors.muted };
+      return {
+        icone: 'resize-outline' as const,
+        bg: colors.accent,
+        cor: colors.primary,
+        textoCor: colors.muted,
+      };
     case 'irrigacao':
-      return { icone: 'water-outline', bg: colors.infoBg, cor: colors.infoText, textoCor: colors.muted };
+      return {
+        icone: 'water-outline' as const,
+        bg: colors.infoBg,
+        cor: colors.infoText,
+        textoCor: colors.muted,
+      };
     case 'alerta':
       return {
-        icone: 'warning-outline',
+        icone: 'warning-outline' as const,
         bg: colors.warningBg,
         cor: colors.warningIcon,
         textoCor: colors.warningText,
@@ -42,13 +59,32 @@ function estiloDetalhe(tipo: DetalheRecomendacao['tipo']): EstiloDetalhe {
   }
 }
 
+function umParam(valor?: string | string[]): string | undefined {
+  return Array.isArray(valor) ? valor[0] : valor;
+}
+
 export default function ResultadoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ culturaId?: string }>();
-  const culturaId = Array.isArray(params.culturaId) ? params.culturaId[0] : (params.culturaId ?? 'milho');
+  const params = useLocalSearchParams<{
+    id?: string;
+    culturaId?: string;
+    latitude?: string;
+    longitude?: string;
+    cidade?: string;
+    estado?: string;
+    detalhes?: string;
+  }>();
 
-  const [rec, setRec] = useState<Recomendacao | null>(null);
+  const id = umParam(params.id);
+  const culturaId = umParam(params.culturaId);
+  const latitude = umParam(params.latitude);
+  const longitude = umParam(params.longitude);
+  const cidade = umParam(params.cidade);
+  const estado = umParam(params.estado);
+  const detalhes = umParam(params.detalhes);
+
+  const [rec, setRec] = useState<RecomendacaoResponse | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
@@ -56,10 +92,25 @@ export default function ResultadoScreen() {
     let ativo = true;
     (async () => {
       try {
-        const r = await obterRecomendacao(culturaId);
-        if (ativo) setRec(r);
-      } catch (e: any) {
-        Alert.alert('Erro', e?.message ?? 'Não foi possível gerar a recomendação.');
+        let resultado: RecomendacaoResponse;
+        if (id) {
+          resultado = await buscarRecomendacao(Number(id));
+        } else {
+          resultado = await gerarRecomendacao({
+            culturaId: Number(culturaId),
+            latitude: Number(latitude),
+            longitude: Number(longitude),
+            cidade: cidade ?? '',
+            estado: estado ?? '',
+            ...(detalhes ? { detalhes } : {}),
+          });
+        }
+        if (ativo) setRec(resultado);
+      } catch (e) {
+        if (ativo) {
+          Alert.alert('Erro', handleApiError(e));
+          router.back();
+        }
       } finally {
         if (ativo) setCarregando(false);
       }
@@ -67,15 +118,18 @@ export default function ResultadoScreen() {
     return () => {
       ativo = false;
     };
-  }, [culturaId]);
+  }, [id, culturaId, latitude, longitude, cidade, estado, detalhes, router]);
 
   async function compartilhar() {
     if (!rec) return;
     try {
+      const p = rec.planoPlantio;
       await Share.share({
-        message: `Recomendação Akaru — ${rec.nome} (${rec.cidade}, ${rec.uf}): ${rec.resumoStatus}.\n${rec.detalhes
-          .map((d) => `• ${d.titulo}: ${d.descricao}`)
-          .join('\n')}`,
+        message:
+          `Recomendação Akaru — ${rec.cultura.nome} (${rec.localizacao.cidade}, ${rec.localizacao.estado}): ` +
+          `aptidão ${rec.scoreAptidao}/100 (${rec.classificacaoAptidao}).\n` +
+          `• Época ideal: ${p.epocaIdeal}\n• Espaçamento: ${p.espacamento}\n` +
+          `• Irrigação: ${p.irrigacao}\n• Alertas: ${p.alertasRisco}`,
       });
     } catch {
       // usuário cancelou o compartilhamento
@@ -86,33 +140,43 @@ export default function ResultadoScreen() {
     if (!rec) return;
     try {
       setSalvando(true);
-      await salvarNoHistorico({
-        id: `h${Date.now()}`,
-        culturaId: rec.culturaId,
-        emoji: rec.emoji,
-        nome: rec.nome,
-        data: 'Agora',
-        status: rec.status,
-      });
+      await salvarNoHistorico(rec.recomendacaoId);
       Alert.alert('Salvo!', 'A recomendação foi salva no seu histórico.');
-    } catch (e: any) {
-      Alert.alert('Erro', e?.message ?? 'Não foi possível salvar.');
+    } catch (e) {
+      Alert.alert('Erro', handleApiError(e));
     } finally {
       setSalvando(false);
     }
   }
 
-  const badge = rec ? statusStyles[rec.status] : statusStyles.Ideal;
+  const cards = rec
+    ? [
+        { tipo: 'epoca' as const, titulo: 'Época ideal', descricao: rec.planoPlantio.epocaIdeal },
+        { tipo: 'espacamento' as const, titulo: 'Espaçamento', descricao: rec.planoPlantio.espacamento },
+        { tipo: 'irrigacao' as const, titulo: 'Irrigação', descricao: rec.planoPlantio.irrigacao },
+        { tipo: 'alerta' as const, titulo: 'Alertas de risco', descricao: rec.planoPlantio.alertasRisco },
+      ]
+    : [];
 
   return (
     <View style={styles.tela}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.gap }]}>
-        <Pressable hitSlop={8} onPress={() => router.back()} accessibilityLabel="Voltar">
+        <Pressable
+          hitSlop={8}
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+        >
           <Ionicons name="arrow-back" size={24} color={colors.onPrimary} />
         </Pressable>
         <Text style={styles.headerTitulo}>Recomendação</Text>
-        <Pressable hitSlop={8} onPress={compartilhar} accessibilityLabel="Compartilhar">
+        <Pressable
+          hitSlop={8}
+          onPress={compartilhar}
+          accessibilityRole="button"
+          accessibilityLabel="Compartilhar"
+        >
           <Ionicons name="share-outline" size={22} color={colors.onPrimary} />
         </Pressable>
       </View>
@@ -123,25 +187,23 @@ export default function ResultadoScreen() {
         <ScrollView contentContainerStyle={styles.conteudo} showsVerticalScrollIndicator={false}>
           {/* Card de cabeçalho */}
           <View style={styles.hero}>
-            <Text style={styles.heroEmoji}>{rec.emoji}</Text>
-            <Text style={styles.heroNome}>{rec.nome}</Text>
+            <Text style={styles.heroEmoji}>{getEmojiForCultura(rec.cultura.nome)}</Text>
+            <Text style={styles.heroNome}>{rec.cultura.nome}</Text>
             <LocationBadge
-              cidade={rec.cidade}
-              estado={rec.uf}
+              cidade={rec.localizacao.cidade}
+              estado={rec.localizacao.estado}
               style={styles.heroLocal}
               textStyle={styles.heroLocalTexto}
             />
-            <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-              <Text style={[styles.badgeTexto, { color: badge.text }]}>✓ {rec.resumoStatus}</Text>
-            </View>
+            <AptidaoBadge classificacao={rec.classificacaoAptidao} score={rec.scoreAptidao} />
           </View>
 
-          {/* Detalhes */}
+          {/* Plano de plantio (4 cards do Gemini) */}
           <View style={{ gap: spacing.gap }}>
-            {rec.detalhes.map((d, i) => {
+            {cards.map((d) => {
               const est = estiloDetalhe(d.tipo);
               return (
-                <View key={i} style={styles.detalhe}>
+                <View key={d.tipo} style={styles.detalhe}>
                   <View style={[styles.detalheIcone, { backgroundColor: est.bg }]}>
                     <Ionicons name={est.icone} size={20} color={est.cor} />
                   </View>
@@ -157,12 +219,18 @@ export default function ResultadoScreen() {
           {/* Perguntar ao IAkaru */}
           <Pressable
             style={styles.cardIAkaru}
-            onPress={() => router.push(`/iakaru?culturaId=${rec.culturaId}`)}
+            accessibilityRole="button"
+            accessibilityLabel={`Perguntar ao IAkaru sobre ${rec.cultura.nome}`}
+            onPress={() =>
+              router.push(
+                `/iakaru?culturaId=${rec.cultura.id}&culturaNome=${encodeURIComponent(rec.cultura.nome)}`,
+              )
+            }
           >
             <View style={styles.iakaruIcone}>
               <Ionicons name="chatbubbles-outline" size={20} color={colors.onPrimary} />
             </View>
-            <Text style={styles.iakaruTexto}>Perguntar ao IAkaru sobre {rec.nome}</Text>
+            <Text style={styles.iakaruTexto}>Perguntar ao IAkaru sobre {rec.cultura.nome}</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.muted} />
           </Pressable>
 
@@ -203,10 +271,8 @@ const styles = StyleSheet.create({
   },
   heroEmoji: { fontSize: 64, marginBottom: spacing.stack },
   heroNome: { fontFamily: fonts.bold, fontSize: 24, color: colors.primary, marginBottom: spacing.stack },
-  heroLocal: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.gap },
+  heroLocal: { marginBottom: spacing.gap },
   heroLocalTexto: { fontFamily: fonts.medium, fontSize: 14, color: colors.muted },
-  badge: { paddingHorizontal: spacing.screen, paddingVertical: 6, borderRadius: radius.pill },
-  badgeTexto: { fontFamily: fonts.bold, fontSize: 12 },
 
   detalhe: {
     flexDirection: 'row',

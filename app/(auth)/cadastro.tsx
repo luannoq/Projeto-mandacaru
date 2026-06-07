@@ -23,6 +23,7 @@ import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocation } from '../../hooks/useLocation';
+import { handleApiError } from '../../utils/handleApiError';
 import { colors, spacing, radius, fonts } from '../../constants/theme';
 
 export default function CadastroScreen() {
@@ -77,8 +78,8 @@ export default function CadastroScreen() {
       setCarregando(true);
       await signUp(nomeLimpo, emailLimpo, senha);
       router.replace('/');
-    } catch (e: any) {
-      Alert.alert('Erro ao criar conta', e?.message ?? 'Tente novamente.');
+    } catch (e) {
+      Alert.alert('Erro', handleApiError(e));
     } finally {
       setCarregando(false);
     }

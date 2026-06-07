@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import TextField from '../../components/TextField';
 import Button from '../../components/Button';
 import { useAuth } from '../../contexts/AuthContext';
+import { handleApiError } from '../../utils/handleApiError';
 import { colors, spacing, fonts } from '../../constants/theme';
 
 export default function LoginScreen() {
@@ -45,8 +46,8 @@ export default function LoginScreen() {
       setCarregando(true);
       await signIn(emailLimpo, senha);
       router.replace('/');
-    } catch (e: any) {
-      Alert.alert('Erro ao entrar', e?.message ?? 'Verifique seus dados e tente novamente.');
+    } catch (e) {
+      Alert.alert('Erro', handleApiError(e));
     } finally {
       setCarregando(false);
     }

@@ -1,7 +1,7 @@
 /**
  * Histórico — conversão fiel do design do Akaru.
- * Busca, lista "Consultas Recentes" com avatar/emoji, status e chevron, e
- * card vazio pontilhado. Dados de listarHistorico().
+ * Busca, lista "Consultas Recentes" com emoji/nome/aptidão e botão de excluir,
+ * e card vazio pontilhado. Dados de listarHistorico() (IDs locais → API).
  */
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -18,16 +18,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import StatusChip from '../../components/StatusChip';
-import { listarHistorico } from '../../services/historico';
-import { ItemHistorico } from '../../services/mocks';
+import AptidaoBadge from '../../components/AptidaoBadge';
+import { listarHistorico, removerDoHistorico } from '../../services/historico';
+import { getEmojiForCultura } from '../../constants/culturas';
+import { handleApiError } from '../../utils/handleApiError';
+import type { RecomendacaoResponse } from '../../types/api';
 import { colors, spacing, radius, fonts, shadow } from '../../constants/theme';
 
 export default function HistoricoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [itens, setItens] = useState<ItemHistorico[]>([]);
+  const [itens, setItens] = useState<RecomendacaoResponse[]>([]);
   const [busca, setBusca] = useState('');
   const [carregando, setCarregando] = useState(true);
 
@@ -37,8 +39,8 @@ export default function HistoricoScreen() {
       try {
         const lista = await listarHistorico();
         if (ativo) setItens(lista);
-      } catch (e: any) {
-        Alert.alert('Erro', e?.message ?? 'Não foi possível carregar o histórico.');
+      } catch (e) {
+        Alert.alert('Erro', handleApiError(e));
       } finally {
         if (ativo) setCarregando(false);
       }
@@ -51,8 +53,24 @@ export default function HistoricoScreen() {
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     if (!termo) return itens;
-    return itens.filter((i) => i.nome.toLowerCase().includes(termo));
+    return itens.filter((i) => i.cultura.nome.toLowerCase().includes(termo));
   }, [busca, itens]);
+
+  function confirmarExclusao(item: RecomendacaoResponse) {
+    Alert.alert('Remover do histórico', `Remover a recomendação de ${item.cultura.nome}?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Remover', style: 'destructive', onPress: () => excluir(item.recomendacaoId) },
+    ]);
+  }
+
+  async function excluir(id: number) {
+    try {
+      await removerDoHistorico(id);
+      setItens((prev) => prev.filter((i) => i.recomendacaoId !== id));
+    } catch (e) {
+      Alert.alert('Erro', handleApiError(e));
+    }
+  }
 
   return (
     <View style={styles.tela}>
@@ -75,6 +93,7 @@ export default function HistoricoScreen() {
             value={busca}
             onChangeText={setBusca}
             autoCorrect={false}
+            accessibilityLabel="Buscar no histórico"
           />
         </View>
 
@@ -87,32 +106,43 @@ export default function HistoricoScreen() {
             <View style={{ gap: spacing.stack }}>
               {filtrados.map((item) => (
                 <Pressable
-                  key={item.id}
+                  key={item.recomendacaoId}
                   style={styles.item}
-                  onPress={() => router.push(`/resultado?culturaId=${item.culturaId}`)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Recomendação de ${item.cultura.nome}, aptidão ${item.classificacaoAptidao}`}
+                  onPress={() => router.push(`/resultado?id=${item.recomendacaoId}`)}
                 >
                   <View style={styles.itemEsq}>
                     <View style={styles.avatar}>
-                      <Text style={styles.avatarEmoji}>{item.emoji}</Text>
+                      <Text style={styles.avatarEmoji}>{getEmojiForCultura(item.cultura.nome)}</Text>
                     </View>
                     <View>
-                      <Text style={styles.itemNome}>{item.nome}</Text>
-                      <Text style={styles.itemData}>{item.data}</Text>
+                      <Text style={styles.itemNome}>{item.cultura.nome}</Text>
+                      <Text style={styles.itemData}>Aptidão {item.scoreAptidao}/100</Text>
                     </View>
                   </View>
                   <View style={styles.itemDir}>
-                    <StatusChip status={item.status} />
-                    <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+                    <AptidaoBadge classificacao={item.classificacaoAptidao} />
+                    <Pressable
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remover ${item.cultura.nome} do histórico`}
+                      onPress={() => confirmarExclusao(item)}
+                    >
+                      <Ionicons name="trash-outline" size={20} color={colors.errorText} />
+                    </Pressable>
                   </View>
                 </Pressable>
               ))}
             </View>
 
             {/* Card vazio pontilhado */}
-            <View style={styles.cardVazio}>
-              <Ionicons name="leaf-outline" size={36} color={colors.secondary} />
-              <Text style={styles.cardVazioTexto}>Suas próximas análises aparecerão aqui.</Text>
-            </View>
+            {filtrados.length === 0 && (
+              <View style={styles.cardVazio}>
+                <Ionicons name="leaf-outline" size={36} color={colors.secondary} />
+                <Text style={styles.cardVazioTexto}>Suas próximas análises aparecerão aqui.</Text>
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -176,7 +206,7 @@ const styles = StyleSheet.create({
   avatarEmoji: { fontSize: 22 },
   itemNome: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
   itemData: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, marginTop: 2 },
-  itemDir: { flexDirection: 'row', alignItems: 'center', gap: spacing.stack },
+  itemDir: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap },
 
   cardVazio: {
     marginTop: spacing.gap,
