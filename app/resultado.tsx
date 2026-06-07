@@ -143,10 +143,10 @@ export default function ResultadoScreen() {
     try {
       setSalvando(true);
       await salvarNoHistorico(rec.recomendacaoId);
-      Alert.alert('Salvo!', 'A recomendação foi salva no seu histórico.');
+      // Sucesso: a própria navegação para a Home é o feedback (sem Alert).
+      router.replace('/(tabs)');
     } catch (e) {
       Alert.alert('Erro', handleApiError(e));
-    } finally {
       setSalvando(false);
     }
   }
