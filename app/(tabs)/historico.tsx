@@ -3,7 +3,7 @@
  * Busca, lista "Consultas Recentes" com emoji/nome/aptidão e botão de excluir,
  * e card vazio pontilhado. Dados de listarHistorico() (IDs locais → API).
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import AptidaoBadge from '../../components/AptidaoBadge';
@@ -44,22 +44,26 @@ export default function HistoricoScreen() {
   const [busca, setBusca] = useState('');
   const [carregando, setCarregando] = useState(true);
 
-  useEffect(() => {
-    let ativo = true;
-    (async () => {
-      try {
-        const lista = await listarHistorico();
-        if (ativo) setItens(lista);
-      } catch (e) {
-        Alert.alert('Erro', handleApiError(e));
-      } finally {
-        if (ativo) setCarregando(false);
-      }
-    })();
-    return () => {
-      ativo = false;
-    };
-  }, []);
+  // Recarrega sempre que a aba ganha foco (pega análises salvas após a montagem).
+  useFocusEffect(
+    useCallback(() => {
+      let ativo = true;
+      setCarregando(true);
+      (async () => {
+        try {
+          const lista = await listarHistorico();
+          if (ativo) setItens(lista);
+        } catch (e) {
+          if (ativo) Alert.alert('Erro', handleApiError(e));
+        } finally {
+          if (ativo) setCarregando(false);
+        }
+      })();
+      return () => {
+        ativo = false;
+      };
+    }, []),
+  );
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();

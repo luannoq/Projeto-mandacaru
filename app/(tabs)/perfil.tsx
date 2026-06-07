@@ -3,7 +3,7 @@
  * Avatar, nome + slogan, badge de versão, infos do build, links e logout real.
  */
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -14,10 +14,32 @@ import { colors, spacing, radius, fonts, shadow } from '../../constants/theme';
 
 type Info = { icone: keyof typeof Ionicons.glyphMap; label: string; valor: string; mono?: boolean };
 
+type Documento = { titulo: string; texto: string };
+
+const POLITICA_PRIVACIDADE: Documento = {
+  titulo: 'Política de privacidade',
+  texto:
+    'O Akaru leva a sério a proteção dos dados dos agricultores. Coletamos apenas as informações ' +
+    'necessárias — e-mail, localização aproximada e suas consultas de cultivo — para gerar ' +
+    'recomendações de plantio mais precisas para a sua região.\n\n' +
+    'Seus dados não são vendidos nem compartilhados com terceiros e são usados exclusivamente para ' +
+    'melhorar sua experiência no aplicativo.',
+};
+
+const TERMOS_USO: Documento = {
+  titulo: 'Termos de uso',
+  texto:
+    'Ao usar o Akaru, você concorda em utilizar as recomendações de plantio como apoio à decisão, ' +
+    'e não como garantia de resultado.\n\n' +
+    'As recomendações são geradas a partir de dados climáticos e de Inteligência Artificial, podendo ' +
+    'variar conforme as condições reais da sua lavoura. Use o aplicativo de forma responsável.',
+};
+
 export default function PerfilScreen() {
   const { signOut } = useAuth();
   const insets = useSafeAreaInsets();
   const [saindo, setSaindo] = useState(false);
+  const [documento, setDocumento] = useState<Documento | null>(null);
 
   const infos: Info[] = [
     { icone: 'person-outline', label: 'Desenvolvido por', valor: mockSobreApp.desenvolvidoPor },
@@ -78,7 +100,9 @@ export default function PerfilScreen() {
         <View style={styles.card}>
           <Pressable
             style={styles.linha}
-            onPress={() => Alert.alert('Política de privacidade', 'Conteúdo disponível em breve.')}
+            accessibilityRole="button"
+            accessibilityLabel="Política de privacidade"
+            onPress={() => setDocumento(POLITICA_PRIVACIDADE)}
           >
             <View style={styles.linhaEsq}>
               <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} />
@@ -88,7 +112,9 @@ export default function PerfilScreen() {
           </Pressable>
           <Pressable
             style={[styles.linha, styles.linhaBorda]}
-            onPress={() => Alert.alert('Termos de uso', 'Conteúdo disponível em breve.')}
+            accessibilityRole="button"
+            accessibilityLabel="Termos de uso"
+            onPress={() => setDocumento(TERMOS_USO)}
           >
             <View style={styles.linhaEsq}>
               <Ionicons name="document-text-outline" size={20} color={colors.primary} />
@@ -112,6 +138,31 @@ export default function PerfilScreen() {
 
         <Text style={styles.rodape}>Global Solution 2026/1 — FIAP</Text>
       </ScrollView>
+
+      {/* Modal de Política de privacidade / Termos de uso */}
+      <Modal
+        visible={documento !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDocumento(null)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitulo}>{documento?.titulo}</Text>
+            <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalTexto}>{documento?.texto}</Text>
+            </ScrollView>
+            <Pressable
+              style={styles.modalBotao}
+              onPress={() => setDocumento(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Entendi"
+            >
+              <Text style={styles.modalBotaoTexto}>Entendi</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -166,9 +217,16 @@ const styles = StyleSheet.create({
     padding: spacing.screen,
   },
   linhaBorda: { borderTopWidth: 1, borderTopColor: colors.border },
-  linhaEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap },
+  linhaEsq: { flexDirection: 'row', alignItems: 'center', gap: spacing.gap, flexShrink: 0 },
   linhaLabel: { fontFamily: fonts.medium, fontSize: 14, color: colors.text },
-  linhaValor: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted },
+  linhaValor: {
+    flexShrink: 1,
+    textAlign: 'right',
+    marginLeft: spacing.gap,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.muted,
+  },
   mono: {
     fontFamily: 'monospace',
     backgroundColor: colors.background,
@@ -199,4 +257,33 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     opacity: 0.6,
   },
+
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.section,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 360,
+    maxHeight: '80%',
+    backgroundColor: colors.surface,
+    borderRadius: radius.card,
+    padding: spacing.section,
+    gap: spacing.gap,
+    ...shadow.card,
+  },
+  modalTitulo: { fontFamily: fonts.bold, fontSize: 18, color: colors.primary },
+  modalScroll: { flexGrow: 0 },
+  modalTexto: { fontFamily: fonts.regular, fontSize: 14, color: colors.text, lineHeight: 21 },
+  modalBotao: {
+    height: 48,
+    backgroundColor: colors.primary,
+    borderRadius: radius.button,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBotaoTexto: { fontFamily: fonts.bold, fontSize: 15, color: colors.onPrimary },
 });
