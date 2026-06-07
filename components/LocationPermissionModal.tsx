@@ -43,9 +43,11 @@ export default function LocationPermissionModal({ visible, onUsarPadrao }: Props
             style={styles.btnSecundario}
             onPress={onUsarPadrao}
             accessibilityRole="button"
-            accessibilityLabel="Usar São Paulo como padrão"
+            accessibilityLabel="Usar São Paulo, SP como localização padrão"
           >
-            <Text style={styles.btnSecundarioTexto}>Usar São Paulo como padrão</Text>
+            <Text style={styles.btnSecundarioTexto}>
+              Usar São Paulo, SP como localização padrão (a recomendação será gerada para essa região)
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -100,9 +102,15 @@ const styles = StyleSheet.create({
   btnPrimarioTexto: { fontFamily: fonts.bold, fontSize: 15, color: colors.onPrimary },
   btnSecundario: {
     width: '100%',
-    height: 48,
+    paddingVertical: spacing.gap,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  btnSecundarioTexto: { fontFamily: fonts.bold, fontSize: 14, color: colors.muted },
+  btnSecundarioTexto: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.muted,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
 });

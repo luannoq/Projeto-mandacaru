@@ -34,7 +34,7 @@ export default function LocationBadge({
   cidade,
   estado,
   loading = false,
-  fallback = 'São Paulo, SP',
+  fallback = 'Localização indisponível',
   color = colors.muted,
   iconSize = 16,
   style,
