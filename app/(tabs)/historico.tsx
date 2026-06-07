@@ -25,6 +25,17 @@ import { handleApiError } from '../../utils/handleApiError';
 import type { RecomendacaoResponse } from '../../types/api';
 import { colors, spacing, radius, fonts, shadow } from '../../constants/theme';
 
+/** Formata uma data ISO em "dd/MM HH:mm" (ex.: "07/06 14:32"). */
+function formatarData(iso?: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const hora = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${dia}/${mes} ${hora}:${min}`;
+}
+
 export default function HistoricoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -118,7 +129,9 @@ export default function HistoricoScreen() {
                     </View>
                     <View>
                       <Text style={styles.itemNome}>{item.cultura.nome}</Text>
-                      <Text style={styles.itemData}>Aptidão {item.scoreAptidao}/100</Text>
+                      <Text style={styles.itemData}>
+                        {item.criadoEm ? formatarData(item.criadoEm) : `Aptidão ${item.scoreAptidao}/100`}
+                      </Text>
                     </View>
                   </View>
                   <View style={styles.itemDir}>

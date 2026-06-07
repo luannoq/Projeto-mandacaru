@@ -78,6 +78,7 @@ export interface RecomendacaoResponse {
   mensagemCompleta: string;
   detalhesUsuario?: string;
   notaPessoal?: string;
+  criadoEm?: string; // formato ISO: "2026-06-07T14:32:00"
 }
 
 // --- Request para gerar recomendação ---
