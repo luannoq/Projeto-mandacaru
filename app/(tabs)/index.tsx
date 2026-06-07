@@ -37,13 +37,6 @@ function iniciais(nome: string | null | undefined): string {
   return ini.toUpperCase() || 'P';
 }
 
-// Clima é um dado secundário: se a API falhar, mostramos um fallback sem assustar o usuário.
-const CLIMA_FALLBACK: ClimaResumoResponse = {
-  temperaturaMedia: 24,
-  umidade: 68,
-  precipitacaoPrevista: 12,
-};
-
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -51,6 +44,7 @@ export default function HomeScreen() {
   const { location, loading: localizando, permissionDenied, requestLocation } = useLocation();
 
   const [clima, setClima] = useState<ClimaResumoResponse | null>(null);
+  const [climaIndisponivel, setClimaIndisponivel] = useState(false);
   const [consultas, setConsultas] = useState<RecomendacaoResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
 
@@ -74,10 +68,16 @@ export default function HomeScreen() {
     (async () => {
       try {
         const c = await consultarClima(location.latitude, location.longitude);
-        if (ativo) setClima(c);
+        if (ativo) {
+          setClima(c);
+          setClimaIndisponivel(false);
+        }
       } catch {
-        // Falha de clima é silenciosa: usa o fallback e segue (não bloqueia o app).
-        if (ativo) setClima(CLIMA_FALLBACK);
+        // Sem fallback: dados devem vir da API. Marca o card como indisponível.
+        if (ativo) {
+          setClima(null);
+          setClimaIndisponivel(true);
+        }
       }
     })();
     return () => {
@@ -154,24 +154,30 @@ export default function HomeScreen() {
             </View>
             {clima && <Text style={styles.climaTemp}>{Math.round(clima.temperaturaMedia)}°C</Text>}
           </View>
-          <View style={styles.climaInfos}>
-            <View style={styles.climaInfo}>
-              <Ionicons name="cloud-outline" size={20} color={colors.muted} />
-              <View>
-                <Text style={styles.climaLabel}>UMIDADE</Text>
-                <Text style={styles.climaValor}>{clima ? `${Math.round(clima.umidade)}%` : '—'}</Text>
+          {climaIndisponivel ? (
+            <View style={styles.climaInfos}>
+              <Text style={styles.climaIndisponivel}>Clima indisponível no momento</Text>
+            </View>
+          ) : (
+            <View style={styles.climaInfos}>
+              <View style={styles.climaInfo}>
+                <Ionicons name="cloud-outline" size={20} color={colors.muted} />
+                <View>
+                  <Text style={styles.climaLabel}>UMIDADE</Text>
+                  <Text style={styles.climaValor}>{clima ? `${Math.round(clima.umidade)}%` : '—'}</Text>
+                </View>
+              </View>
+              <View style={styles.climaInfo}>
+                <Ionicons name="water-outline" size={20} color={colors.muted} />
+                <View>
+                  <Text style={styles.climaLabel}>CHUVA</Text>
+                  <Text style={styles.climaValor}>
+                    {clima ? `${Math.round(clima.precipitacaoPrevista)}mm` : '—'}
+                  </Text>
+                </View>
               </View>
             </View>
-            <View style={styles.climaInfo}>
-              <Ionicons name="water-outline" size={20} color={colors.muted} />
-              <View>
-                <Text style={styles.climaLabel}>CHUVA</Text>
-                <Text style={styles.climaValor}>
-                  {clima ? `${Math.round(clima.precipitacaoPrevista)}mm` : '—'}
-                </Text>
-              </View>
-            </View>
-          </View>
+          )}
         </View>
 
         {/* Nova análise */}
@@ -299,6 +305,7 @@ const styles = StyleSheet.create({
   climaInfo: { flexDirection: 'row', alignItems: 'center', gap: spacing.stack },
   climaLabel: { fontFamily: fonts.bold, fontSize: 10, color: colors.muted, letterSpacing: 0.5 },
   climaValor: { fontFamily: fonts.bold, fontSize: 14, color: colors.text },
+  climaIndisponivel: { fontFamily: fonts.medium, fontSize: 13, color: colors.muted },
 
   secao: { gap: spacing.gap },
   secaoHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
