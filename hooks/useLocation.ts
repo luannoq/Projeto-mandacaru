@@ -1,18 +1,20 @@
 /**
  * Hook de geolocalização do Akaru (expo-location).
  *
- * Solicita a permissão de localização, captura as coordenadas do dispositivo e
- * faz reverse geocoding para obter cidade/estado. A localização fica apenas
- * armazenada por enquanto — quando a API Java estiver pronta, lat/lon serão
- * enviados no payload da recomendação.
+ * Solicita a permissão, captura as coordenadas e faz reverse geocoding para
+ * obter cidade/estado. Usa a última posição conhecida (instantânea) antes de
+ * pedir uma nova, evitando que a tela fique presa carregando.
+ *
+ * IMPORTANTE: timeout/indisponibilidade do GPS NÃO é o mesmo que permissão
+ * negada — `permissionDenied` só fica true quando o SO realmente nega.
  */
 import { useCallback, useState } from 'react';
 import * as Location from 'expo-location';
 
 import { nomeParaUF } from '../constants/estados';
 
-/** Tempo máximo de espera pela posição do GPS antes de cair no fallback. */
-const GPS_TIMEOUT_MS = 10000;
+/** Tempo máximo de espera por uma posição nova do GPS. */
+const GPS_TIMEOUT_MS = 15000;
 
 export type LocationData = {
   latitude: number;
@@ -28,11 +30,20 @@ type UseLocation = {
   loading: boolean;
   /** Mensagem de erro amigável, ou null. */
   error: string | null;
-  /** True quando o usuário negou a permissão de localização. */
+  /** True APENAS quando o usuário negou a permissão de localização. */
   permissionDenied: boolean;
   /** Solicita a permissão (se necessário) e captura a localização atual. */
   requestLocation: () => Promise<LocationData | null>;
 };
+
+/** Promise.race com timeout que limpa o timer ao concluir (evita timers órfãos). */
+function comTimeout<T>(promessa: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const limite = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('gps-timeout')), ms);
+  });
+  return Promise.race([promessa, limite]).finally(() => clearTimeout(timer)) as Promise<T>;
+}
 
 export function useLocation(): UseLocation {
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -43,7 +54,6 @@ export function useLocation(): UseLocation {
   const requestLocation = useCallback(async (): Promise<LocationData | null> => {
     setLoading(true);
     setError(null);
-    setPermissionDenied(false);
 
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -52,12 +62,21 @@ export function useLocation(): UseLocation {
         setError('Permissão de localização negada.');
         return null;
       }
+      // Permissão concedida — garante que não estamos no estado "negado".
+      setPermissionDenied(false);
 
-      // Timeout de segurança: GPS lento não deve travar a tela carregando.
-      const posicao = await Promise.race([
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('gps-timeout')), GPS_TIMEOUT_MS)),
-      ]);
+      // Última posição conhecida é instantânea; só capturamos uma nova se faltar.
+      let posicao = await Location.getLastKnownPositionAsync();
+      if (!posicao) {
+        posicao = await comTimeout(
+          Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+          GPS_TIMEOUT_MS,
+        );
+      }
+      if (!posicao) {
+        setError('Não foi possível obter a localização.');
+        return null;
+      }
 
       const dados: LocationData = {
         latitude: posicao.coords.latitude,
@@ -83,9 +102,8 @@ export function useLocation(): UseLocation {
       setLocation(dados);
       return dados;
     } catch (e: any) {
-      // Timeout ou falha do GPS: trata como sem localização para exibir o
-      // modal/banner de fallback (mesmo caminho da permissão negada).
-      setPermissionDenied(true);
+      // GPS lento/indisponível COM permissão concedida: não é "permissão negada".
+      // Deixa a tela tratar a ausência de localização (sem disparar o modal de permissão).
       setError(
         e?.message === 'gps-timeout'
           ? 'Tempo esgotado ao obter a localização.'

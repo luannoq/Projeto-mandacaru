@@ -3,7 +3,7 @@
  * Busca de cultura, grid 3 colunas com seleção destacada, detalhes opcionais
  * e botão "Analisar" fixo no rodapé. Culturas vêm da API (apiCatalogo).
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,11 +13,10 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
-  AppState,
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import Button from '../../components/Button';
@@ -45,6 +44,10 @@ export default function AnaliseScreen() {
   const [carregando, setCarregando] = useState(true);
   // Usuário optou por seguir com a localização padrão (São Paulo).
   const [usouFallback, setUsouFallback] = useState(false);
+  // True após a 1ª tentativa de localização concluir (evita flash do modal).
+  const [jaTentou, setJaTentou] = useState(false);
+  // True enquanto a tela de Análise está focada (o modal só aparece aqui).
+  const [focado, setFocado] = useState(false);
 
   useEffect(() => {
     let ativo = true;
@@ -63,21 +66,30 @@ export default function AnaliseScreen() {
     };
   }, []);
 
-  // Captura a localização em segundo plano para enviar na análise.
+  // Captura a localização ao montar (uma vez). Marca jaTentou ao concluir.
   useEffect(() => {
-    requestLocation();
+    let ativo = true;
+    (async () => {
+      await requestLocation();
+      if (ativo) setJaTentou(true);
+    })();
+    return () => {
+      ativo = false;
+    };
   }, [requestLocation]);
 
-  // Ao voltar das Configurações (app ativo), re-checa a permissão.
-  // Se o usuário tiver concedido, a localização chega e o modal some sozinho.
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (estado) => {
-      if (estado === 'active') requestLocation();
-    });
-    return () => sub.remove();
-  }, [requestLocation]);
+  // Marca a tela como focada — o modal de localização só aparece aqui
+  // (Modal do RN é global; sem isso ele cobriria IAkaru/Perfil/Home).
+  useFocusEffect(
+    useCallback(() => {
+      setFocado(true);
+      return () => setFocado(false);
+    }, []),
+  );
 
   const semLocalizacaoConfirmada = !location && !usouFallback;
+  // Mostra o modal quando, na tela focada, a 1ª tentativa terminou sem localização.
+  const mostrarModalLocal = focado && jaTentou && !location && !usouFallback;
 
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -196,11 +208,8 @@ export default function AnaliseScreen() {
         <Button titulo="Analisar" onPress={analisar} disabled={semLocalizacaoConfirmada} />
       </View>
 
-      {/* Permissão de GPS negada */}
-      <LocationPermissionModal
-        visible={permissionDenied && !usouFallback}
-        onUsarPadrao={() => setUsouFallback(true)}
-      />
+      {/* Localização indisponível (permissão negada ou GPS sem resposta) */}
+      <LocationPermissionModal visible={mostrarModalLocal} onUsarPadrao={() => setUsouFallback(true)} />
     </View>
   );
 }

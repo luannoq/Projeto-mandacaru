@@ -12,7 +12,6 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
-  AppState,
   Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,17 +47,9 @@ export default function HomeScreen() {
   const [consultasErro, setConsultasErro] = useState(false);
   const [carregando, setCarregando] = useState(true);
 
-  // Localização ao abrir a Home.
+  // Localização ao abrir a Home (uma vez).
   useEffect(() => {
     requestLocation();
-  }, [requestLocation]);
-
-  // Re-checa a permissão ao voltar das Configurações (some o banner se concedida).
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (estado) => {
-      if (estado === 'active') requestLocation();
-    });
-    return () => sub.remove();
   }, [requestLocation]);
 
   // Clima real assim que houver localização (falha de clima não bloqueia a tela).
