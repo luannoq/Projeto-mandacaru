@@ -265,13 +265,22 @@ Opcionalmente, é possível sobrescrever o valor via variável de ambiente
 
 ---
 
-## 📡 Integração com a API (em andamento)
+## 📡 Integração com a API
 
-A camada [`services/`](services/) já tem o cliente Axios pronto
-([`services/api.ts`](services/api.ts)) apontando para `EXPO_PUBLIC_API_URL`. As operações
-ainda consomem [`services/mocks.ts`](services/mocks.ts); cada ponto de integração está marcado
-com `// TODO: integrar com API real` e será conectado ao backend **Java Spring Boot / .NET**
-(CRUD de culturas, recomendações, histórico e o endpoint Gemini do IAkaru).
+A integração com a **API Java (Spring Boot)** está **concluída** — todos os dados de domínio
+vêm da API real (sem mocks): autenticação por JWT, catálogo de culturas, clima, recomendações
+(geradas pelo **Gemini**) e o chat do IAkaru. O **CRUD completo** está implementado e acionável
+na UI:
+
+- **Create** — `POST /api/recomendacao` (gerar recomendação na Nova Análise)
+- **Read** — `GET /api/recomendacao/{id}` e `GET /api/culturas`
+- **Update** — `PUT /api/recomendacao/{id}` (editar nota no Histórico)
+- **Delete** — `DELETE /api/recomendacao/{id}` (excluir no Histórico)
+
+Os clientes Axios ([`services/api.ts`](services/api.ts)) apontam para as URLs configuráveis
+`EXPO_PUBLIC_API_CATALOGO_URL` e `EXPO_PUBLIC_API_RECOMENDACAO_URL` (produção no Azure). O
+[`services/mocks.ts`](services/mocks.ts) guarda apenas conteúdo de UI (metadados do app e a
+saudação do IAkaru) — nenhum dado de domínio mockado.
 
 ---
 
