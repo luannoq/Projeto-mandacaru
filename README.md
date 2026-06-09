@@ -209,6 +209,20 @@ exposta publicamente — o jeito mais simples é via **ngrok** (rodado por quem 
 
 ---
 
+## ⚠️ Observações de produção
+
+### Cold start do Azure
+
+As APIs estão hospedadas no Azure App Service (plano básico), que pode "dormir" após períodos de inatividade. A **primeira requisição após inatividade** (login, lista de culturas) pode demorar entre 10 e 30 segundos — isso é comportamento normal do plano básico do Azure, não é um bug.
+
+**Se aparecer erro de conexão no primeiro acesso:** aguarde alguns segundos e tente novamente. A partir da segunda requisição, o tempo de resposta volta ao normal.
+
+### URLs de produção
+
+As URLs das APIs estão configuradas no `.env` — não são commitadas por segurança. O `.env.example` contém as URLs de referência.
+
+---
+
 ## 📍 Localização (GPS)
 
 O app usa **expo-location** para capturar a localização do produtor e enviar
