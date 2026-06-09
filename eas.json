@@ -15,12 +15,20 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_CATALOGO_URL": "https://app-akaru-catalogo-cyfgd4ejadfpefhc.southafricanorth-01.azurewebsites.net",
+        "EXPO_PUBLIC_API_RECOMENDACAO_URL": "https://app-akaru-recomendacao-hjhecqd7hsfrdhcv.southafricanorth-01.azurewebsites.net"
       }
     },
     "production": {
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_CATALOGO_URL": "https://app-akaru-catalogo-cyfgd4ejadfpefhc.southafricanorth-01.azurewebsites.net",
+        "EXPO_PUBLIC_API_RECOMENDACAO_URL": "https://app-akaru-recomendacao-hjhecqd7hsfrdhcv.southafricanorth-01.azurewebsites.net"
       }
     }
   },
