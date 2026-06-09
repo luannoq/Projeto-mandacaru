@@ -8,7 +8,7 @@
  * Exibe hero (emoji, nome, localização, badge de aptidão), os 4 cards do
  * plano de plantio (Gemini) e ações.
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert, Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -88,39 +88,38 @@ export default function ResultadoScreen() {
 
   const [rec, setRec] = useState<RecomendacaoResponse | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
-  useEffect(() => {
-    let ativo = true;
-    (async () => {
-      try {
-        let resultado: RecomendacaoResponse;
-        if (id) {
-          resultado = await buscarRecomendacao(Number(id));
-        } else {
-          resultado = await gerarRecomendacao({
-            culturaId: Number(culturaId),
-            latitude: Number(latitude),
-            longitude: Number(longitude),
-            cidade: cidade ?? '',
-            estado: estado ?? '',
-            ...(detalhes ? { detalhes } : {}),
-          });
-        }
-        if (ativo) setRec(resultado);
-      } catch (e) {
-        if (ativo) {
-          Alert.alert('Erro', handleApiError(e));
-          router.back();
-        }
-      } finally {
-        if (ativo) setCarregando(false);
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    setErro(false);
+    try {
+      let resultado: RecomendacaoResponse;
+      if (id) {
+        resultado = await buscarRecomendacao(Number(id));
+      } else {
+        resultado = await gerarRecomendacao({
+          culturaId: Number(culturaId),
+          latitude: Number(latitude),
+          longitude: Number(longitude),
+          cidade: cidade ?? '',
+          estado: estado ?? '',
+          ...(detalhes ? { detalhes } : {}),
+        });
       }
-    })();
-    return () => {
-      ativo = false;
-    };
-  }, [id, culturaId, latitude, longitude, cidade, estado, detalhes, router]);
+      setRec(resultado);
+    } catch {
+      // Não navega de volta: mostra a tela de erro inline com retry.
+      setErro(true);
+    } finally {
+      setCarregando(false);
+    }
+  }, [id, culturaId, latitude, longitude, cidade, estado, detalhes]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
 
   async function compartilhar() {
     if (!rec) return;
@@ -183,8 +182,20 @@ export default function ResultadoScreen() {
         </Pressable>
       </View>
 
-      {carregando || !rec ? (
+      {carregando ? (
         <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
+      ) : erro || !rec ? (
+        <View style={styles.erroBox}>
+          <Ionicons name="warning-outline" size={48} color={colors.warningIcon} />
+          <Text style={styles.erroTitulo}>Não foi possível gerar a recomendação</Text>
+          <Text style={styles.erroTexto}>
+            O servidor pode estar iniciando, tente novamente em alguns segundos.
+          </Text>
+          <View style={styles.erroAcoes}>
+            <Button titulo="Tentar novamente" onPress={carregar} />
+            <Button titulo="Voltar" variant="outline" onPress={() => router.back()} />
+          </View>
+        </View>
       ) : (
         <ScrollView contentContainerStyle={styles.conteudo} showsVerticalScrollIndicator={false}>
           {/* Card de cabeçalho */}
@@ -271,6 +282,29 @@ const styles = StyleSheet.create({
   headerTitulo: { fontFamily: fonts.semibold, fontSize: 18, color: colors.onPrimary },
 
   conteudo: { padding: spacing.screen, gap: spacing.screen, paddingBottom: spacing.xl },
+
+  erroBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.section,
+    gap: spacing.gap,
+  },
+  erroTitulo: {
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    color: colors.primary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  erroTexto: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.muted,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  erroAcoes: { width: '100%', gap: spacing.gap, marginTop: spacing.gap },
 
   hero: {
     backgroundColor: colors.surface,
