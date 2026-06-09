@@ -11,6 +11,9 @@ import * as Location from 'expo-location';
 
 import { nomeParaUF } from '../constants/estados';
 
+/** Tempo máximo de espera pela posição do GPS antes de cair no fallback. */
+const GPS_TIMEOUT_MS = 10000;
+
 export type LocationData = {
   latitude: number;
   longitude: number;
@@ -50,9 +53,11 @@ export function useLocation(): UseLocation {
         return null;
       }
 
-      const posicao = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      // Timeout de segurança: GPS lento não deve travar a tela carregando.
+      const posicao = await Promise.race([
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('gps-timeout')), GPS_TIMEOUT_MS)),
+      ]);
 
       const dados: LocationData = {
         latitude: posicao.coords.latitude,
@@ -78,7 +83,14 @@ export function useLocation(): UseLocation {
       setLocation(dados);
       return dados;
     } catch (e: any) {
-      setError(e?.message ?? 'Não foi possível obter a localização.');
+      // Timeout ou falha do GPS: trata como sem localização para exibir o
+      // modal/banner de fallback (mesmo caminho da permissão negada).
+      setPermissionDenied(true);
+      setError(
+        e?.message === 'gps-timeout'
+          ? 'Tempo esgotado ao obter a localização.'
+          : (e?.message ?? 'Não foi possível obter a localização.'),
+      );
       return null;
     } finally {
       setLoading(false);
