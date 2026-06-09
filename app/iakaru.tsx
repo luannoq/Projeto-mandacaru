@@ -31,8 +31,8 @@ import { colors, spacing, radius, fonts, shadow } from '../constants/theme';
 /** Mensagem do chat, com flag de erro para estilizar a bolha. */
 type Mensagem = MensagemChat & { erro?: boolean };
 
-/** Tempo máximo de espera local pela resposta do assistente. */
-const TIMEOUT_IAKARU_MS = 65000;
+/** Tempo máximo de espera local pela resposta do assistente (pouco acima do Axios). */
+const TIMEOUT_IAKARU_MS = 35000;
 
 /** Avatar circular do IAkaru (folha em fundo verde claro). */
 function AvatarIAkaru({ size = 32 }: { size?: number }) {

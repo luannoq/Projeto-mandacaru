@@ -49,8 +49,8 @@ function configurarInterceptors(instancia: AxiosInstance): AxiosInstance {
 export const apiCatalogo = configurarInterceptors(
   axios.create({
     baseURL: catalogoURL,
-    // 25s: cobre o cold start do App Service no Azure (planos básicos "dormem").
-    timeout: 25000,
+    // 15s: Always On ativo no Azure (sem cold start).
+    timeout: 15000,
     headers: { 'Content-Type': 'application/json' },
   }),
 );
@@ -58,8 +58,8 @@ export const apiCatalogo = configurarInterceptors(
 export const apiRecomendacao = configurarInterceptors(
   axios.create({
     baseURL: recomendacaoURL,
-    // 60s: este serviço chama o Gemini, que pode demorar mais que os 15s padrão.
-    timeout: 60000,
+    // 30s: este serviço chama o Gemini, que ainda pode demorar um pouco.
+    timeout: 30000,
     headers: { 'Content-Type': 'application/json' },
   }),
 );
