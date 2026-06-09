@@ -219,6 +219,12 @@ o Azure). `localhost` **não resolve** do celular, então é preciso expor a API
 
 As APIs estão hospedadas no **Azure App Service** com **Always On** ativo — ou seja, **sem cold start**. Ainda assim, algumas operações podem **levar alguns segundos**, especialmente as que usam **IA Generativa (Gemini)**. O app aguarda até os limites configurados (15s no catálogo, 30s na recomendação) e, se estourar, exibe um **erro amigável com opção de tentar novamente** — não trava a tela.
 
+### Serviço de IA (Gemini) e limite de uso
+
+As funcionalidades de **IA Generativa** — gerar recomendação e o chat do **IAkaru** — dependem do **Google Gemini** (via API Java). O Gemini tem **limite de requisições por minuto (rate limit)**; quando esse limite é atingido, o backend responde **HTTP 503** e o app exibe **"Serviço temporariamente indisponível"**.
+
+Isso é **esperado e transitório**: basta tocar em **"Tentar novamente"** (ou reenviar a pergunta no IAkaru) que, após alguns segundos, a resposta é gerada normalmente. Pode ser necessário repetir 1–2 vezes em horários de maior uso. **Não é um erro do aplicativo** — é o comportamento do limite de uso da IA.
+
 ### URLs de produção
 
 As URLs das APIs estão configuradas no `.env` — não são commitadas por segurança. O `.env.example` contém as URLs de referência.
