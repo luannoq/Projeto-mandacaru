@@ -33,8 +33,11 @@ function ehEmailDuplicado(data: unknown): boolean {
 
 export function handleApiError(error: unknown): string {
   if (isAxiosError(error)) {
-    // Sem response = falha de conexão/timeout (não chegou ao servidor).
+    // Sem response = não chegou ao servidor (timeout ou falha de rede).
     if (!error.response) {
+      if (error.code === 'ECONNABORTED' || /timeout/i.test(error.message ?? '')) {
+        return 'O servidor demorou a responder. Tente novamente.';
+      }
       return 'Verifique sua conexão com a internet';
     }
 
@@ -49,8 +52,10 @@ export function handleApiError(error: unknown): string {
         return 'Recurso não encontrado';
       case 409:
         return EMAIL_DUPLICADO;
+      case 429:
+        return 'Serviço de IA temporariamente indisponível (limite de uso atingido). Tente novamente em alguns minutos.';
       case 503:
-        return 'Serviço temporariamente indisponível';
+        return 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.';
       default:
         return 'Erro inesperado. Tente novamente.';
     }

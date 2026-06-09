@@ -89,6 +89,7 @@ export default function ResultadoScreen() {
   const [rec, setRec] = useState<RecomendacaoResponse | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
+  const [msgErro, setMsgErro] = useState('');
   const [salvando, setSalvando] = useState(false);
 
   const carregar = useCallback(async () => {
@@ -109,8 +110,9 @@ export default function ResultadoScreen() {
         });
       }
       setRec(resultado);
-    } catch {
-      // Não navega de volta: mostra a tela de erro inline com retry.
+    } catch (e) {
+      // Não navega de volta: mostra a tela de erro inline com retry e o motivo real.
+      setMsgErro(handleApiError(e));
       setErro(true);
     } finally {
       setCarregando(false);
@@ -188,9 +190,7 @@ export default function ResultadoScreen() {
         <View style={styles.erroBox}>
           <Ionicons name="warning-outline" size={48} color={colors.warningIcon} />
           <Text style={styles.erroTitulo}>Não foi possível gerar a recomendação</Text>
-          <Text style={styles.erroTexto}>
-            O servidor pode estar iniciando, tente novamente em alguns segundos.
-          </Text>
+          <Text style={styles.erroTexto}>{msgErro || 'Tente novamente em alguns segundos.'}</Text>
           <View style={styles.erroAcoes}>
             <Button titulo="Tentar novamente" onPress={carregar} />
             <Button titulo="Voltar" variant="outline" onPress={() => router.back()} />
