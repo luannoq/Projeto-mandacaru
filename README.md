@@ -166,7 +166,6 @@ Separação de responsabilidades: **UI** (`app`/`components`), **estado** (`cont
    ```bash
    EXPO_PUBLIC_API_CATALOGO_URL=http://localhost:8081
    EXPO_PUBLIC_API_RECOMENDACAO_URL=http://localhost:8082
-   EXPO_PUBLIC_USE_MOCKS=false
    ```
 3. **Inicie o app:**
    ```bash
@@ -177,10 +176,15 @@ Separação de responsabilidades: **UI** (`app`/`components`), **estado** (`cont
 > ⚠️ O Expo Go atual exige **SDK 54**. Sem a API Java no ar (ou as URLs corretas no `.env`),
 > o login/cadastro e o carregamento de dados falham com mensagens de erro amigáveis.
 
-### Testando no Expo Go com ngrok
+> 💡 **Em produção as APIs já estão no Azure** (URLs no `.env.example`) — para testar contra
+> produção **não é preciso ngrok**: basta abrir no Expo Go. Como há timeouts configurados
+> (15s catálogo · 30s recomendação · 35s IAkaru), uma operação pode **levar alguns segundos**
+> antes de responder ou exibir um erro amigável — especialmente as que usam IA (Gemini).
 
-`localhost` **não resolve** do celular. Para testar no dispositivo físico, a API precisa estar
-exposta publicamente — o jeito mais simples é via **ngrok** (rodado por quem sobe a API):
+### Testando no Expo Go com ngrok (apenas para API local)
+
+O ngrok só é necessário se você quiser testar contra uma **API rodando localmente** (não contra
+o Azure). `localhost` **não resolve** do celular, então é preciso expor a API publicamente:
 
 1. Suba os 2 microserviços localmente (portas `8081` e `8082`).
 2. Exponha cada um: `ngrok http 8081` e `ngrok http 8082` (2 terminais → 2 URLs públicas).
@@ -211,11 +215,9 @@ exposta publicamente — o jeito mais simples é via **ngrok** (rodado por quem 
 
 ## ⚠️ Observações de produção
 
-### Cold start do Azure
+### Hospedagem e tempo de resposta
 
-As APIs estão hospedadas no Azure App Service (plano básico), que pode "dormir" após períodos de inatividade. A **primeira requisição após inatividade** (login, lista de culturas) pode demorar entre 10 e 30 segundos — isso é comportamento normal do plano básico do Azure, não é um bug.
-
-**Se aparecer erro de conexão no primeiro acesso:** aguarde alguns segundos e tente novamente. A partir da segunda requisição, o tempo de resposta volta ao normal.
+As APIs estão hospedadas no **Azure App Service** com **Always On** ativo — ou seja, **sem cold start**. Ainda assim, algumas operações podem **levar alguns segundos**, especialmente as que usam **IA Generativa (Gemini)**. O app aguarda até os limites configurados (15s no catálogo, 30s na recomendação) e, se estourar, exibe um **erro amigável com opção de tentar novamente** — não trava a tela.
 
 ### URLs de produção
 
@@ -238,8 +240,10 @@ recomendações específicas para a região.
   - **Cadastro** — botão "Usar GPS" captura cidade/estado via reverse geocoding.
   - **Home** — captura automática ao abrir; a cidade real aparece no card de clima.
   - **Nova análise** — `lat`/`lon` são incluídos nos parâmetros enviados ao Resultado.
-- **Fallback:** se a permissão for negada, o app continua funcionando com a localização
-  mockada (`São Paulo, SP`).
+- **Fallback:** se a permissão for negada — ou se o GPS não responder em **10s** — o app exibe
+  um **modal explicativo**. O usuário pode abrir as Configurações ou optar por usar
+  **São Paulo, SP** como localização padrão. Sem GPS, o card de clima mostra
+  "Localização indisponível".
 
 A lógica fica no hook [`hooks/useLocation.ts`](hooks/useLocation.ts) e o componente
 [`components/LocationBadge.tsx`](components/LocationBadge.tsx) exibe a localização atual.
@@ -281,13 +285,3 @@ Os clientes Axios ([`services/api.ts`](services/api.ts)) apontam para as URLs co
 `EXPO_PUBLIC_API_CATALOGO_URL` e `EXPO_PUBLIC_API_RECOMENDACAO_URL` (produção no Azure). O
 [`services/mocks.ts`](services/mocks.ts) guarda apenas conteúdo de UI (metadados do app e a
 saudação do IAkaru) — nenhum dado de domínio mockado.
-
----
-
-## 📱 Telas
-
-> _Prints a adicionar:_ Login · Cadastro · Home · Nova análise · Resultado · IAkaru · Histórico · Sobre o App
-
-```
-assets/screenshots/  → (adicionar capturas das telas aqui antes da entrega)
-```
