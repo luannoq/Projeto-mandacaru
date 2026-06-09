@@ -49,8 +49,8 @@ function configurarInterceptors(instancia: AxiosInstance): AxiosInstance {
 export const apiCatalogo = configurarInterceptors(
   axios.create({
     baseURL: catalogoURL,
-    // 20s: cobre o cold start do App Service no Azure (planos básicos "dormem").
-    timeout: 20000,
+    // 25s: cobre o cold start do App Service no Azure (planos básicos "dormem").
+    timeout: 25000,
     headers: { 'Content-Type': 'application/json' },
   }),
 );
