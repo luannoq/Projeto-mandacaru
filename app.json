@@ -16,7 +16,12 @@
     },
     "android": {
       "package": "br.com.fiap.akaru",
-      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#1B4D1E",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -48,6 +53,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ad3b51e3-a417-4c7d-a20f-3a98912117ae"
+      }
     }
   }
 }
